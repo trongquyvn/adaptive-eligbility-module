@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { Pencil } from 'lucide-react';
+
 interface Patient {
   id: string;
   site: string;
@@ -42,6 +45,7 @@ export default function PatientTable({ patients }: PatientTableProps) {
             <th className="py-3">Site</th>
             <th className="py-3">Date Screened</th>
             <th className="py-3">Eligibility Status</th>
+            <th className="py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -60,6 +64,13 @@ export default function PatientTable({ patients }: PatientTableProps) {
                 >
                   {p.status}
                 </span>
+              </td>
+              <td className="py-3">
+                <Link href={`/patient/${p.id.replace('#', '')}`}>
+                  <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </Link>
               </td>
             </tr>
           ))}
