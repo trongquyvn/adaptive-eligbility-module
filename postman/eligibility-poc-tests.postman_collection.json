@@ -1,0 +1,137 @@
+{
+  "info": {
+    "name": "Adaptive Eligibility POC Tests",
+    "_postman_id": "b1c2d3e4-f5a6-7890-bcde-ff1234567890",
+    "description": "POC Eligibility API tests with auto validation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Case 1 - Eligible",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "http://localhost:3000/eligibility/check",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["eligibility", "check"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"P100\",\n  \"age\": 30,\n  \"icu_admit_time\": \"2025-08-25T15:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should be Eligible\", function () {",
+              "  pm.expect(pm.response.json().outcome).to.eql(\"Eligible\");",
+              "  pm.expect(pm.response.json().reasonsFailed).to.eql([]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 2 - Fail (Age < 18)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "http://localhost:3000/eligibility/check",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["eligibility", "check"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"P101\",\n  \"age\": 16,\n  \"icu_admit_time\": \"2025-08-25T15:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should fail because Age < 18\", function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
+              "  pm.expect(json.reasonsFailed).to.include(\"Age < 18\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 3 - Fail (ICU admission > 24h)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "http://localhost:3000/eligibility/check",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["eligibility", "check"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"P102\",\n  \"age\": 50,\n  \"icu_admit_time\": \"2025-08-24T05:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should fail because ICU admission > 24h\", function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
+              "  pm.expect(json.reasonsFailed).to.include(\"ICU admission too long ago (>24h)\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 4 - Fail (Consent not obtained)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "http://localhost:3000/eligibility/check",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["eligibility", "check"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"P103\",\n  \"age\": 40,\n  \"icu_admit_time\": \"2025-08-25T20:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": false,\n  \"renal_failure\": false\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Should fail because no consent\", function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
+              "  pm.expect(json.reasonsFailed).to.include(\"Consent not obtained\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

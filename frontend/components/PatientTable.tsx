@@ -1,0 +1,63 @@
+export default function PatientTable() {
+  const patients = [
+    { id: "#123A", site: "Site A", date: "00/00/0000", status: "Eligible" },
+    { id: "#123B", site: "Site A", date: "00/00/0000", status: "Ineligible" },
+    { id: "#123B", site: "Site A", date: "00/00/0000", status: "Pending" },
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const statusStyle: any = {
+    Eligible: "bg-green-100 text-green-700",
+    Ineligible: "bg-red-100 text-red-700",
+    Pending: "bg-gray-100 text-gray-600",
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-6">
+      {/* Search + Filters */}
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Patient Name"
+          className="border rounded-lg px-3 py-2 w-1/3"
+        />
+        <div className="flex gap-2">
+          <button className="px-4 py-2 border rounded-lg">Filters (3)</button>
+          <button className="px-4 py-2 border rounded-lg">Export</button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <table className="w-full text-left border-t">
+        <thead>
+          <tr className="text-gray-500">
+            <th className="py-3">Patient ID</th>
+            <th className="py-3">Site</th>
+            <th className="py-3">Date Screened</th>
+            <th className="py-3">Eligibility Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {patients.map((p, i) => (
+            <tr key={i} className="border-t">
+              <td className="py-3">{p.id}</td>
+              <td className="py-3">
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700">
+                  {p.site}
+                </span>
+              </td>
+              <td className="py-3">{p.date}</td>
+              <td className="py-3">
+                <span
+                  className={`px-3 py-1 rounded-full ${statusStyle[p.status]}`}
+                >
+                  {p.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

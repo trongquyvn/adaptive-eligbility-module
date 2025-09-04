@@ -1,0 +1,495 @@
+======= RULE ====== 
+{
+  "schema_version": "1.0",
+  "trial": {
+    "id": "remap-cap",
+    "version": "v2.4",
+    "jurisdiction": ["AU", "NZ", "UK"],
+    "effective_from": "2025-06-01T00:00:00Z"
+  },
+  "metadata": {
+    "title": "REMAP-CAP Eligibility",
+    "description": "Platform → CAP → Time Windows → Consent → Domain/Regimen resolution",
+    "author": "Empiric",
+    "created_at": "2025-06-26T00:00:00Z"
+  },
+  "variables": [
+    {
+      "id": "age_years",
+      "type": "number",
+      "source": "CRF",
+      "path": "screening.demographics.age",
+      "unit": "years",
+      "nullable": false
+    },
+    {
+      "id": "icu_admit_time",
+      "type": "datetime",
+      "source": "CRF",
+      "path": "screening.icu.admit_time",
+      "nullable": false
+    },
+    {
+      "id": "organ_support_started_time",
+      "type": "datetime",
+      "source": "CRF",
+      "path": "screening.support.started_time",
+      "nullable": true
+    },
+    {
+      "id": "consent_obtained",
+      "type": "code",
+      "codes": { "YES": 1, "NO": 0, "UNKNOWN": 9 },
+      "source": "CRF",
+      "path": "consent.status"
+    },
+    {
+      "id": "pregnant",
+      "type": "boolean",
+      "source": "CRF",
+      "path": "screening.pregnancy.status"
+    }
+  ],
+  "domain_catalog": [
+    { "id": "antibiotics", "active": true },
+    { "id": "steroids", "active": true },
+    { "id": "anticoag", "active": false }
+  ],
+  "regimen_catalog": [
+    { "id": "abx_a", "domain_id": "antibiotics", "label": "ABX Regimen A" },
+    { "id": "abx_b", "domain_id": "antibiotics", "label": "ABX Regimen B" },
+    {
+      "id": "steroid_low",
+      "domain_id": "steroids",
+      "label": "Low-dose Steroid"
+    }
+  ],
+  "logic": {
+    "root": "platform_gate",
+    "nodes": {
+      "platform_gate": {
+        "type": "ALL",
+        "children": [
+          "age_gate",
+          "icu_window_gate",
+          "organ_support_window_gate"
+        ],
+        "reason_on_fail": "Platform eligibility not met"
+      },
+      "age_gate": {
+        "type": "COMPARE",
+        "operator": ">=",
+        "left": { "var": "age_years" },
+        "right": { "const": 18 },
+        "reason_on_fail": "Age < 18"
+      },
+      "icu_window_gate": {
+        "type": "TIME_WINDOW",
+        "left": { "now": true },
+        "right": { "var": "icu_admit_time" },
+        "window": { "max_hours_since_right": 24 },
+        "reason_on_fail": "Outside ICU admission window (24h)"
+      },
+      "organ_support_window_gate": {
+        "type": "ANY",
+        "children": ["organ_support_recent", "organ_support_not_required"],
+        "reason_on_fail": "Organ support requirement not met"
+      },
+      "organ_support_recent": {
+        "type": "TIME_WINDOW",
+        "left": { "now": true },
+        "right": { "var": "organ_support_started_time" },
+        "window": { "max_hours_since_right": 48 },
+        "reason_on_fail": "No organ support within 48h"
+      },
+      "organ_support_not_required": {
+        "type": "CONST_BOOL",
+        "value": false,
+        "comment": "Fallback path if trial ever waives support requirement"
+      },
+      "cap_gate": {
+        "type": "ALL",
+        "children": ["cap_radiology", "cap_clinical_feature"],
+        "reason_on_fail": "CAP not confirmed"
+      },
+      "cap_radiology": {
+        "type": "BOOLEAN",
+        "input": { "var": "cap_infiltrate_present" },
+        "reason_on_fail": "No new/worsening infiltrate"
+      },
+      "cap_clinical_feature": {
+        "type": "ANY",
+        "children": ["feat_fever", "feat_cough", "feat_dyspnoea"],
+        "reason_on_fail": "No clinical features"
+      },
+      "feat_fever": {
+        "type": "BOOLEAN",
+        "input": { "var": "cap_fever" }
+      },
+      "feat_cough": {
+        "type": "BOOLEAN",
+        "input": { "var": "cap_cough" }
+      },
+      "feat_dyspnoea": {
+        "type": "BOOLEAN",
+        "input": { "var": "cap_dyspnoea" }
+      },
+      "consent_gate": {
+        "type": "IF",
+        "cond": {
+          "type": "BOOLEAN",
+          "input": { "var": "consent_required" }
+        },
+        "then": {
+          "type": "COMPARE",
+          "operator": "==",
+          "left": { "var": "consent_obtained" },
+          "right": { "const": 1 },
+          "reason_on_fail": "Consent not obtained"
+        },
+        "else": { "type": "CONST_BOOL", "value": true }
+      },
+      "domain_eligibility": {
+        "type": "MAP",
+        "map_type": "domains",
+        "items": [
+          {
+            "domain_id": "antibiotics",
+            "rule": {
+              "type": "ALL",
+              "children": ["abx_required_path", "pregnancy_ok"]
+            }
+          },
+          {
+            "domain_id": "steroids",
+            "rule": {
+              "type": "ALL",
+              "children": ["shock_or_severe", "no_steroid_contra"]
+            }
+          }
+        ]
+      },
+      "abx_required_path": {
+        "type": "BOOLEAN",
+        "input": { "var": "receiving_abx_for_cap" },
+        "reason_on_fail": "Not receiving antibiotics for CAP"
+      },
+      "pregnancy_ok": {
+        "type": "NOT",
+        "child": {
+          "type": "BOOLEAN",
+          "input": { "var": "pregnant" }
+        },
+        "reason_on_fail": "Pregnancy excludes from ABX domain"
+      },
+      "shock_or_severe": {
+        "type": "ANY",
+        "children": ["vasopressors_true", "pao2_fio2_low"],
+        "reason_on_fail": "Not in severe state required for Steroid domain"
+      },
+      "vasopressors_true": {
+        "type": "BOOLEAN",
+        "input": { "var": "on_vasopressors" }
+      },
+      "pao2_fio2_low": {
+        "type": "COMPARE",
+        "operator": "<=",
+        "left": { "var": "pao2_fio2_ratio" },
+        "right": { "const": 150 }
+      },
+      "regimen_matrix": {
+        "type": "REGIMEN_RESOLVE",
+        "input": {
+          "eligible_domains_ref": "domain_eligibility"
+        },
+        "constraints": [
+          {
+            "regimen_id": "abx_a",
+            "exclude_if": {
+              "type": "BOOLEAN",
+              "input": { "var": "beta_lactam_allergy" }
+            },
+            "reason_on_exclude": "Allergy to beta-lactam"
+          }
+        ],
+        "require_min_regimens": 2,
+        "reason_on_fail": "NER – no eligible regimen set"
+      }
+    },
+    "flow": [
+      {
+        "id": "platform_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "PLATFORM_FAIL" },
+        "next": "cap_gate"
+      },
+      {
+        "id": "cap_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "NO_CAP" },
+        "next": "consent_gate"
+      },
+      {
+        "id": "consent_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "DC" },
+        "next": "domain_eligibility"
+      },
+      { "id": "domain_eligibility", "next": "regimen_matrix" },
+      {
+        "id": "regimen_matrix",
+        "on_fail": { "outcome": "REGISTRY", "code": "NER" },
+        "on_pass": { "outcome": "RANDOMISE" }
+      }
+    ]
+  }
+}
+
+
+1) Happy path → RANDOMISE (meets platform, CAP, consent; ≥2 regimens)
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0001",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 62 } },
+    "icu": { "admit_time": "2025-06-26T01:00:00Z" },
+    "support": { "started_time": "2025-06-25T18:30:00Z" },
+    "cap": { "infiltrate": true, "fever": true, "cough": false, "dyspnoea": false },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": false },
+    "phys": { "on_vasopressors": true, "pao2_fio2": 140 },
+    "allergy": { "beta_lactam": false }
+  }
+}
+expected_outcome
+{
+  "status": "RANDOMISE",
+  "eligible_domains": ["antibiotics", "steroids"],
+  "eligible_regimens": ["abx_a", "abx_b", "steroid_low"],
+  "registry_code": null,
+  "key_reasons": []
+}
+
+2) Outside ICU time window (admit >24h) → REGISTRY: PLATFORM_FAIL
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0002",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 70 } },
+    "icu": { "admit_time": "2025-06-24T08:00:00Z" },
+    "support": { "started_time": "2025-06-25T20:00:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "phys": { "on_vasopressors": true, "pao2_fio2": 120 },
+    "pregnancy": { "status": false }
+  }
+}
+expected_outcome
+{
+  "status": "REGISTRY",
+  "registry_code": "PLATFORM_FAIL",
+  "key_reasons": ["Outside ICU admission window (24h)"]
+}
+
+3) No CAP radiology/clinical evidence → REGISTRY: NO_CAP
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0003",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 55 } },
+    "icu": { "admit_time": "2025-06-26T04:00:00Z" },
+    "support": { "started_time": "2025-06-26T05:00:00Z" },
+    "cap": { "infiltrate": false, "fever": false, "cough": false, "dyspnoea": false },
+    "consent": { "required": true, "status": 1 }
+  }
+}
+expected_outcome
+{
+  "status": "REGISTRY",
+  "registry_code": "NO_CAP",
+  "key_reasons": ["No new/worsening infiltrate", "No clinical features"]
+}
+
+4) Consent required but not obtained → REGISTRY: DC
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0004",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 63 } },
+    "icu": { "admit_time": "2025-06-26T03:00:00Z" },
+    "support": { "started_time": "2025-06-26T04:00:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 0 }
+  }
+}
+expected_outcome
+{
+  "status": "REGISTRY",
+  "registry_code": "DC",
+  "key_reasons": ["Consent not obtained"]
+}
+
+5) NER (No Eligible Regimens): allergy knocks out all ABX; steroids ineligible → REGISTRY: NER
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0005",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 58 } },
+    "icu": { "admit_time": "2025-06-26T02:00:00Z" },
+    "support": { "started_time": "2025-06-26T03:00:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": false },
+    "allergy": { "beta_lactam": true },
+    "phys": { "on_vasopressors": false, "pao2_fio2": 220 }
+  }
+}
+expected_outcome
+{
+  "status": "REGISTRY",
+  "registry_code": "NER",
+  "key_reasons": [
+    "Allergy to beta-lactam",
+    "Not in severe state required for Steroid domain"
+  ]
+}
+
+6) Pending (missing critical inputs) → PENDING with data prompts
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0006",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 60 } },
+    "icu": { "admit_time": null },
+    "support": { "started_time": null },
+    "cap": { "infiltrate": null, "fever": true },
+    "consent": { "required": true, "status": 1 }
+  }
+}
+expected_outcome
+{
+  "status": "PENDING",
+  "data_needed": ["icu_admit_time", "organ_support_started_time", "cap_infiltrate_present"],
+  "key_reasons": []
+}
+
+7) UK jurisdiction override (age threshold 16) → RANDOMISE
+(Assumes override lowers age threshold to 16; patient is 17.)
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "UK",
+  "patient_id": "P-0007",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 17 } },
+    "icu": { "admit_time": "2025-06-26T09:00:00Z" },
+    "support": { "started_time": "2025-06-26T07:30:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": false },
+    "phys": { "on_vasopressors": true, "pao2_fio2": 160 },
+    "allergy": { "beta_lactam": false }
+  }
+}
+expected_outcome
+{
+  "status": "RANDOMISE",
+  "eligible_domains": ["antibiotics", "steroids"],
+  "eligible_regimens": ["abx_a", "abx_b", "steroid_low"]
+}
+
+8) Pregnancy excludes from ABX; still RANDOMISE via steroids
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0008",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 29 } },
+    "icu": { "admit_time": "2025-06-26T08:00:00Z" },
+    "support": { "started_time": "2025-06-26T06:30:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": true },
+    "phys": { "on_vasopressors": true, "pao2_fio2": 140 },
+    "allergy": { "beta_lactam": false }
+  }
+}
+expected_outcome
+{
+  "status": "RANDOMISE",
+  "eligible_domains": ["steroids"],
+  "eligible_regimens": ["steroid_low"],
+  "key_reasons": ["Pregnancy excludes from ABX domain"]
+}
+
+9) Organ support too late (>48h) but ICU window OK → REGISTRY: PLATFORM_FAIL
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0009",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 67 } },
+    "icu": { "admit_time": "2025-06-26T03:30:00Z" },
+    "support": { "started_time": "2025-06-23T09:00:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 }
+  }
+}
+expected_outcome
+{
+  "status": "REGISTRY",
+  "registry_code": "PLATFORM_FAIL",
+  "key_reasons": ["No organ support within 48h"]
+}
+
+10) Steroid domain fails severity; ABX eligible → RANDOMISE (ABX only)
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0010",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 51 } },
+    "icu": { "admit_time": "2025-06-26T06:00:00Z" },
+    "support": { "started_time": "2025-06-26T04:00:00Z" },
+    "cap": { "infiltrate": true, "fever": true },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": false },
+    "phys": { "on_vasopressors": false, "pao2_fio2": 210 },
+    "allergy": { "beta_lactam": false }
+  }
+}
+expected_outcome
+{
+  "status": "RANDOMISE",
+  "eligible_domains": ["antibiotics"],
+  "eligible_regimens": ["abx_a", "abx_b"],
+  "key_reasons": ["Not in severe state required for Steroid domain"]
+}

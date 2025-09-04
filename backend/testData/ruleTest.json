@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0",
+  "trial": {
+    "id": "remap-cap",
+    "version": "v2.4",
+    "jurisdiction": ["AU", "NZ", "UK"],
+    "effective_from": "2025-06-01T00:00:00Z"
+  },
+  "metadata": {
+    "title": "REMAP-CAP Eligibility",
+    "description": "Platform → CAP → Time Windows → Consent → Domain/Regimen resolution",
+    "author": "Empiric",
+    "created_at": "2025-06-26T00:00:00Z"
+  },
+  "domain_catalog": [
+    { "id": "antibiotics", "active": true },
+    { "id": "steroids", "active": true },
+    { "id": "anticoag", "active": false }
+  ],
+  "regimen_catalog": [
+    { "id": "abx_a", "domain_id": "antibiotics", "label": "ABX Regimen A" },
+    { "id": "abx_b", "domain_id": "antibiotics", "label": "ABX Regimen B" },
+    {
+      "id": "steroid_low",
+      "domain_id": "steroids",
+      "label": "Low-dose Steroid"
+    }
+  ],
+  "logic": {
+    "root": "platform_gate",
+    "nodes": {
+      "platform_gate": {
+        "name": "Platform gate",
+        "type": "ALL",
+        "children": [
+          "age_gate",
+          "icu_window_gate",
+          "organ_support_window_gate"
+        ],
+        "reason_on_fail": "Platform eligibility not met"
+      },
+      "patient_exists": {
+        "name": "Patient exists",
+        "type": "DATABASE",
+        "input": { "var": "database.status" },
+        "reason_on_fail": "Patient not exists in database"
+      },
+      "age_gate": {
+        "name": "Age gate",
+        "type": "COMPARE",
+        "operator": ">=",
+        "left": { "var": "screening.demographics.age", "type": "number" },
+        "right": { "const": 18 },
+        "reason_on_fail": "Age < 18"
+      },
+      "icu_window_gate": {
+        "name": "ICU window gate",
+        "type": "TIME_WINDOW",
+        "left": { "var": "icu.admit_time", "type": "datetime" },
+        "window": { "max_hours_since": 24 },
+        "reason_on_fail": "Outside ICU admission window (24h)"
+      },
+      "organ_support_window_gate": {
+        "name": "Organ support window gate",
+        "type": "ANY",
+        "children": ["organ_support_recent", "organ_support_not_required"],
+        "reason_on_fail": "Organ support requirement not met"
+      },
+      "organ_support_recent": {
+        "name": "Organ support recent",
+        "type": "TIME_WINDOW",
+        "left": { "var": "support.started_time", "type": "datetime" },
+        "window": { "max_hours_since": 48 },
+        "reason_on_fail": "No organ support within 48h"
+      },
+      "organ_support_not_required": {
+        "name": "Organ support not required",
+        "type": "CONST_BOOL",
+        "value": true,
+        "comment": "Fallback path if trial ever waives support requirement"
+      },
+      "cap_gate": {
+        "name": "CAP required",
+        "type": "ALL",
+        "children": ["cap_radiology", "cap_clinical_feature"],
+        "reason_on_fail": "CAP not confirmed"
+      },
+      "cap_radiology": {
+        "name": "CAP radiology",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.infiltrate" },
+        "reason_on_fail": "No new/worsening infiltrate"
+      },
+      "cap_clinical_feature": {
+        "name": "CAP clinical feature",
+        "type": "ANY",
+        "children": ["feat_fever", "feat_cough", "feat_dyspnoea"],
+        "reason_on_fail": "No clinical features"
+      },
+      "feat_fever": {
+        "name": "CAP fever",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.fever" }
+      },
+      "feat_cough": {
+        "name": "CAP cough",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.cough" }
+      },
+      "feat_dyspnoea": {
+        "name": "CAP dyspnoea",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.dyspnoea" }
+      },
+      "consent_gate": {
+        "name": "Consent gate",
+        "type": "IF",
+        "cond": {
+          "type": "BOOLEAN",
+          "input": { "var": "consent.required" }
+        },
+        "then": {
+          "type": "COMPARE",
+          "operator": "==",
+          "left": { "var": "consent.status" },
+          "right": { "const": 1 },
+          "reason_on_fail": "Consent not obtained"
+        },
+        "else": { "type": "CONST_BOOL", "value": true }
+      },
+      "domain_eligibility": {
+        "name": "Domain eligibility",
+        "type": "MAP",
+        "items": [
+          {
+            "domain_id": "antibiotics",
+            "rule": {
+              "type": "ALL",
+              "children": ["abx_required_path", "pregnancy_ok"]
+            }
+          },
+          {
+            "domain_id": "steroids",
+            "rule": {
+              "type": "ALL",
+              "children": ["shock_or_severe", "no_steroid_contra"]
+            }
+          }
+        ]
+      },
+      "abx_required_path": {
+        "name": "abx required path",
+        "type": "BOOLEAN",
+        "input": { "var": "therapy.receiving_abx_for_cap" },
+        "reason_on_fail": "Not receiving antibiotics for CAP"
+      },
+      "pregnancy_ok": {
+        "name": "Pregnancy",
+        "type": "NOT",
+        "input": { "var": "pregnancy.status" },
+        "reason_on_fail": "Pregnancy excludes from ABX domain"
+      },
+      "shock_or_severe": {
+        "name": "Shock or Severe",
+        "type": "ANY",
+        "children": ["vasopressors_true", "pao2_fio2_low"],
+        "reason_on_fail": "Not in severe state required for Steroid domain"
+      },
+      "no_steroid_contra": {
+        "name": "No steroid contra",
+        "type": "NOT",
+        "input": { "var": "allergy.beta_lactam" },
+        "reason_on_fail": "No steroid contra"
+      },
+      "vasopressors_true": {
+        "name": "Vasopressors",
+        "type": "BOOLEAN",
+        "input": { "var": "phys.on_vasopressors" }
+      },
+      "pao2_fio2_low": {
+        "name": "pao2 fio2 low",
+        "type": "COMPARE",
+        "operator": "<=",
+        "left": { "var": "phys.pao2_fio2" },
+        "right": { "const": 150 }
+      },
+      "regimen_matrix": {
+        "name": "Regimen",
+        "type": "REGIMEN_RESOLVE",
+        "input": {
+          "eligible_domains_ref": "domain_eligibility"
+        },
+        "constraints": [
+          {
+            "regimen_id": "abx_a",
+            "exclude_if": {
+              "type": "BOOLEAN",
+              "input": { "var": "beta_lactam_allergy" }
+            },
+            "reason_on_exclude": "Allergy to beta-lactam"
+          }
+        ],
+        "require_min_regimens": 2,
+        "reason_on_fail": "NER – no eligible regimen set"
+      }
+    },
+    "flow": [
+      {
+        "id": "platform_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "PLATFORM_FAIL" },
+        "next": "cap_gate"
+      },
+      {
+        "id": "cap_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "NO_CAP" },
+        "next": "consent_gate"
+      },
+      {
+        "id": "consent_gate",
+        "on_fail": { "outcome": "REGISTRY", "code": "DC" },
+        "next": "domain_eligibility"
+      },
+      { "id": "domain_eligibility", "next": "regimen_matrix" },
+      {
+        "id": "regimen_matrix",
+        "on_fail": { "outcome": "REGISTRY", "code": "NER" },
+        "on_pass": { "outcome": "RANDOMISE" }
+      }
+    ]
+  }
+}

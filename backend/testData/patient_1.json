@@ -1,0 +1,23 @@
+{
+  "trial_id": "remap-cap",
+  "trial_version": "v2.4",
+  "jurisdiction": "AU",
+  "patient_id": "P-0001",
+  "now": "2025-06-26T10:30:00Z",
+  "data": {
+    "screening": { "demographics": { "age": 62 } },
+    "icu": { "admit_time": "2025-06-26T01:00:00Z" },
+    "support": { "started_time": "2025-06-25T18:30:00Z" },
+    "cap": {
+      "infiltrate": true,
+      "fever": true,
+      "cough": false,
+      "dyspnoea": false
+    },
+    "consent": { "required": true, "status": 1 },
+    "therapy": { "receiving_abx_for_cap": true },
+    "pregnancy": { "status": false },
+    "phys": { "on_vasopressors": true, "pao2_fio2": 140 },
+    "allergy": { "beta_lactam": false }
+  }
+}
