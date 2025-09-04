@@ -36,7 +36,7 @@ const mockPatients = {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string; }>; }
 ) {
   const { id } = await params;
   const patient = mockPatients[id as keyof typeof mockPatients];
