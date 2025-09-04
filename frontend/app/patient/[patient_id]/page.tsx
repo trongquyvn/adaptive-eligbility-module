@@ -1,4 +1,5 @@
 import PatientDetailPage from "@/components/PatientDetailPage";
+import { API_BASE_URL } from "@/contanst";
 
 interface PatientDetailProps {
   params: {
@@ -22,11 +23,6 @@ interface Patient {
     reason: string;
   };
 }
-
-// API base URL configuration - should be moved to environment variables in production
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:3000'
-  : '';
 
 /**
  * Fetches patient data from the API with comprehensive error handling
