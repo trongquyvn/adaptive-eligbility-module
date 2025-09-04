@@ -38,10 +38,8 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  console.log('request: ', request); 
-  console.log('params.id: ', params.id);
-  const patient = mockPatients[params.id as keyof typeof mockPatients];
-  console.log('patient: ', patient);
+  const { id } = await params;
+  const patient = mockPatients[id as keyof typeof mockPatients];
 
   if (!patient) {
     return NextResponse.json({ error: "Patient not found" }, { status: 404 });

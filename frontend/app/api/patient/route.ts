@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-// mock data chung
 const mockPatients = {
   "123A": {
     id: "123A",
@@ -34,7 +33,6 @@ const mockPatients = {
   },
 };
 
-// GET /api/patient → danh sách
 export async function GET() {
   // convert object -> array
   const patients = Object.values(mockPatients);
