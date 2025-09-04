@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,47 +14,51 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const storedUsername = localStorage.getItem('username');
-    
+    const token = localStorage.getItem("authToken");
+    const storedUsername = localStorage.getItem("username");
+
     if (token && storedUsername) {
       setIsAuthenticated(true);
       setUsername(storedUsername);
     }
-    
+
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (!isLoading) {
       // Redirect logic
-      if (isAuthenticated && pathname === '/') {
-        router.push('/dashboard');
-      } else if (!isAuthenticated && pathname !== '/') {
-        router.push('/');
+      if (isAuthenticated && pathname === "/") {
+        router.push("/dashboard");
       }
     }
   }, [isAuthenticated, pathname, router, isLoading]);
 
   const login = (username: string) => {
-    localStorage.setItem('authToken', 'mock-jwt-token');
-    localStorage.setItem('username', username);
+    localStorage.setItem("authToken", "mock-jwt-token");
+    localStorage.setItem("username", username);
     setIsAuthenticated(true);
     setUsername(username);
   };
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('username');
+  const logout = async () => {
+    setIsLoading(true);
+
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("username");
+    setUsername("");
     setIsAuthenticated(false);
-    setUsername('');
-    router.push('/');
+    router.push("/");
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
   };
 
   if (isLoading) {
@@ -75,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

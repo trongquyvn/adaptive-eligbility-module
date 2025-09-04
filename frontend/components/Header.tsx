@@ -2,14 +2,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "./AuthProvider";
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    // Handle logout logic here
-    console.log("Logging out...");
+    logout();
     setIsDropdownOpen(false);
   };
 
