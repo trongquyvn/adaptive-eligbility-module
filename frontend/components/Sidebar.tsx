@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, ClipboardList, Users, Target } from "lucide-react";
 
 const menu = [
-  { label: "Home", icon: Home, href: "/" },
+  { label: "Home", icon: Home, href: "/dashboard" },
   { label: "Roadmap", icon: ClipboardList, href: "/roadmap" },
   { label: "Population", icon: Users, href: "/population" },
   { label: "Objectives", icon: Target, href: "/objectives" },

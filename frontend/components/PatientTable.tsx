@@ -1,9 +1,16 @@
-export default function PatientTable() {
-  const patients = [
-    { id: "#123A", site: "Site A", date: "00/00/0000", status: "Eligible" },
-    { id: "#123B", site: "Site A", date: "00/00/0000", status: "Ineligible" },
-    { id: "#123B", site: "Site A", date: "00/00/0000", status: "Pending" },
-  ];
+interface Patient {
+  id: string;
+  site: string;
+  date: string;
+  status: string;
+}
+
+interface PatientTableProps {
+  patients: Patient[];
+  onAddPatient?: (patient: Patient) => void;
+}
+
+export default function PatientTable({ patients }: PatientTableProps) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const statusStyle: any = {
