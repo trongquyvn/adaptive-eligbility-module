@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Home, ClipboardList, Users, Target } from "lucide-react";
+import Link from "next/link";
 
 const menu = [
   { label: "Home", icon: Home, href: "/patient" },
@@ -26,9 +27,9 @@ export default function Sidebar() {
         {menu.map((item) => {
           const isActive = mounted && pathname === item.href;
           return (
-            <a
+            <Link
               key={item.href}
-              href={item.href}
+              href={`${item.href}`}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition
                 ${
                   isActive
@@ -39,7 +40,7 @@ export default function Sidebar() {
             >
               <item.icon size={18} />
               {item.label}
-            </a>
+            </Link>
           );
         })}
       </nav>
