@@ -32,8 +32,8 @@ interface Patient {
 async function getPatient(id: string): Promise<Patient | null> {
   try {
     // Validate input
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      console.error('Invalid patient ID provided:', id);
+    if (!id || typeof id !== "string" || id.trim() === "") {
+      console.error("Invalid patient ID provided:", id);
       return null;
     }
 
@@ -42,7 +42,7 @@ async function getPatient(id: string): Promise<Patient | null> {
       {
         cache: "no-store",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         // Add timeout for better error handling
         signal: AbortSignal.timeout(10000), // 10 second timeout
@@ -52,16 +52,17 @@ async function getPatient(id: string): Promise<Patient | null> {
     // Handle HTTP errors with more specific error messages
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      const errorMessage = errorData.error || `HTTP error! status: ${res.status}`;
+      const errorMessage =
+        errorData.error || `HTTP error! status: ${res.status}`;
       console.error(`Failed to fetch patient ${id}:`, errorMessage);
       return null;
     }
 
     const patientData = await res.json();
-    
+
     // Validate the response structure
-    if (!patientData || typeof patientData !== 'object') {
-      console.error('Invalid patient data received for ID:', id);
+    if (!patientData || typeof patientData !== "object") {
+      console.error("Invalid patient data received for ID:", id);
       return null;
     }
 
@@ -69,7 +70,7 @@ async function getPatient(id: string): Promise<Patient | null> {
   } catch (error) {
     // Handle network errors, timeouts, and other exceptions
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         console.error(`Request timeout for patient ${id}`);
       } else {
         console.error(`Network error fetching patient ${id}:`, error.message);
@@ -87,7 +88,7 @@ async function getPatient(id: string): Promise<Patient | null> {
  */
 export default async function PatientDetail({ params }: PatientDetailProps) {
   const { patient_id } = await params;
-  
+
   // Fetch patient data with error handling
   const patient = await getPatient(patient_id);
 
@@ -96,21 +97,23 @@ export default async function PatientDetail({ params }: PatientDetailProps) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Patient Not Found</h2>
+          <h2 className="text-lg font-semibold text-red-800 mb-2">
+            Patient Not Found
+          </h2>
           <p className="text-red-600">
-            Unable to find patient with ID: <span className="font-mono bg-red-100 px-2 py-1 rounded">{patient_id}</span>
+            Unable to find patient with ID:{" "}
+            <span className="font-mono bg-red-100 px-2 py-1 rounded">
+              {patient_id}
+            </span>
           </p>
           <p className="text-red-500 text-sm mt-2">
-            This could be due to an invalid ID, network issues, or the patient may not exist in the system.
+            This could be due to an invalid ID, network issues, or the patient
+            may not exist in the system.
           </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-6">
-      <PatientDetailPage patient={patient} />
-    </div>
-  );
+  return <PatientDetailPage patient={patient} />;
 }

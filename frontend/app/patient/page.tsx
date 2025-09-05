@@ -18,7 +18,8 @@ export default function PatientPage() {
     { id: "#123C", site: "Site A", date: "00/00/0000", status: "Pending" },
   ]);
 
-  const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] = useState(false);
+  const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
+    useState(false);
 
   const handleCreatePatient = () => {
     setIsCreatePatientModalOpen(true);
@@ -26,21 +27,28 @@ export default function PatientPage() {
 
   const handleCreatePatientSubmit = (patientData: Omit<Patient, "id">) => {
     // Generate patient ID
-    const patientId = `#${Math.floor(Math.random() * 10000).toString().padStart(3, '0')}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
-    
+    const patientId = `#${Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(3, "0")}${String.fromCharCode(
+      65 + Math.floor(Math.random() * 26)
+    )}`;
+
     const newPatient: Patient = {
       id: patientId,
       ...patientData,
     };
 
-    setPatients(prev => [...prev, newPatient]);
+    setPatients((prev) => [...prev, newPatient]);
     setIsCreatePatientModalOpen(false);
   };
 
   return (
     <section>
       <div className="mb-4 flex justify-between">
-        <h2 className="text-xl">REMAP-CAP v2.4</h2>
+        <h2 className="text-xl">
+          REMAP-CAP
+          <span className="text-xs"> v2.4</span>
+        </h2>
 
         <button
           onClick={handleCreatePatient}
@@ -49,6 +57,8 @@ export default function PatientPage() {
           + Create New Patient
         </button>
       </div>
+
+      <br />
 
       <PatientTable patients={patients} />
 

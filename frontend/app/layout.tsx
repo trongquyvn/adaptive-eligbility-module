@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/layout/AuthProvider";
+import { AuthProvider } from "@/context/AuthProvider";
+import { PatientProvider } from "@/context/PatientContext";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
+
+import rule from "@/mockData/rule1.json";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,17 +22,33 @@ export const metadata: Metadata = {
   description: "Adaptive Eligibility Module",
 };
 
-export default function RootLayout({
+async function getPatients() {
+  // const res = await fetch(`${process.env.API_URL}/patients`, {
+  //   cache: "no-store", // hoặc "force-cache" tùy use case
+  // });
+  // if (!res.ok) throw new Error("Failed to fetch patients");
+  // return res.json();
+  return [];
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const patients = await getPatients();
+
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable}`}
+        suppressHydrationWarning
+      >
         <AuthProvider>
           <ConditionalLayout>
-            {children}
+            <PatientProvider patients={patients} rule={rule}>
+              {children}
+            </PatientProvider>
           </ConditionalLayout>
         </AuthProvider>
       </body>

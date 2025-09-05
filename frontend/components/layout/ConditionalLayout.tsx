@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/context/AuthProvider';
 import Sidebar from './Sidebar';
 import Header from './Header';
 

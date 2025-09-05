@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.0",
+  "trial": {
+    "id": "remap-cap",
+    "version": "v2.4",
+    "jurisdiction": ["AU", "NZ", "UK"],
+    "effective_from": "2025-06-01T00:00:00Z"
+  },
+  "metadata": {
+    "title": "REMAP-CAP Eligibility",
+    "description": "Platform → CAP → Time Windows → Consent → Domain/Regimen resolution",
+    "author": "Empiric",
+    "created_at": "2025-06-26T00:00:00Z"
+  },
+  "domain_catalog": [
+    { "id": "antibiotics", "active": true },
+    { "id": "steroids", "active": true },
+    { "id": "anticoag", "active": false }
+  ],
+  "regimen_catalog": [
+    { "id": "abx_a", "domain_id": "antibiotics", "label": "ABX Regimen A" },
+    { "id": "abx_b", "domain_id": "antibiotics", "label": "ABX Regimen B" },
+    {
+      "id": "steroid_low",
+      "domain_id": "steroids",
+      "label": "Low-dose Steroid"
+    }
+  ],
+  "logic": {
+    "root": "platform_gate",
+    "nodes": {
+      "patient_check_eCRF": {
+        "name": "Patient demographic checks",
+        "cate": "1",
+        "type": "BOOLEAN",
+        "input": { "var": "eCRF" },
+        "reason_on_fail": "Patient has not entered eCRF"
+      },
+      "database_checking": {
+        "name": "Are they already in the database",
+        "cate": "1",
+        "type": "DATABASE",
+        "input": { "var": "database.status" },
+        "reason_on_fail": "Patient has not in database"
+      },
+      "different_patient": {
+        "name": "It is a different patient",
+        "cate": "1",
+        "type": "BOOLEAN",
+        "input": { "var": "new", "type": "boolean" },
+        "reason_on_fail": "different_patient"
+      },
+      "randomised_since": {
+        "name": "Has it been more than 90 days since they were randomised",
+        "cate": "1",
+        "type": "TIME_WINDOW",
+        "left": { "var": "support.started_time" },
+        "window": { "max_hours_since": 90 },
+        "reason_on_fail": "randomised_sine"
+      },
+      "CAP_assessment": {
+        "name": "CAP assessment",
+        "cate": "1",
+        "type": "BOOLEAN",
+        "left": { "var": "cap.assessment" },
+        "reason_on_fail": "CAP_assessment"
+      },
+      "CAP_assessment_2": {
+        "name": "CAP assessment 2",
+        "cate": "2",
+        "type": "BOOLEAN",
+        "left": { "var": "cap.assessment" },
+        "reason_on_fail": "CAP_assessment"
+      },
+      "REMAP_CAP_Platform_eligible": {
+        "name": "REMAP-CAP Platform eligible",
+        "cate": "3",
+        "type": "BOOLEAN",
+        "left": { "var": "cap.assessment" },
+        "reason_on_fail": "REMAP_CAP_Platform_eligible"
+      },
+      "participating_registry_domain": {
+        "name": "Is the site participating in the Registry domain",
+        "cate": "3",
+        "type": "BOOLEAN",
+        "left": { "var": "cap.assessment" },
+        "reason_on_fail": "participating_registry_domain"
+      },
+      "domain_eligibility": {
+        "name": "Domain level eligibility assessment",
+        "cate": "4",
+        "type": "MAP",
+        "items": [
+          {
+            "domain_id": "antibiotics",
+            "rule": {
+              "type": "ANY",
+              "children": ["CAP_assessment", "REMAP_CAP_Platform_eligible"]
+            }
+          },
+          {
+            "domain_id": "steroids",
+            "rule": {
+              "type": "ANY",
+              "children": ["CAP_assessment", "REMAP_CAP_Platform_eligible"]
+            }
+          }
+        ]
+      },
+      "regimen_matrix": {
+        "name": "Eligible for 2 or more REGIMEN",
+        "cate": "4",
+        "type": "REGIMEN_RESOLVE",
+        "input": {
+          "eligible_domains_ref": "domain_eligibility"
+        },
+        "constraints": [
+          {
+            "regimen_id": "abx_a",
+            "exclude_if": {
+              "type": "BOOLEAN",
+              "input": { "var": "beta_lactam_allergy" }
+            },
+            "reason_on_exclude": "Allergy to beta-lactam"
+          }
+        ],
+        "require_min_regimens": 2,
+        "reason_on_fail": "NER – no eligible regimen set"
+      },
+      "consent": {
+        "name": "Do we need consent",
+        "cate": "5",
+        "type": "BOOLEAN",
+        "left": { "var": "consent.required" },
+        "reason_on_fail": "consent"
+      },
+      "screened_patient": {
+        "name": "Master List of screened patient's",
+        "type": "BOOLEAN",
+        "cate": "1",
+        "left": { "var": "consent.required" },
+        "reason_on_fail": "screened patient"
+      }
+    },
+    "flow": [
+      {
+        "id": "patient_check_eCRF",
+        "on_pass": { "next": "database_checking" },
+        "start": true
+      },
+      {
+        "id": "database_checking",
+        "on_fail": { "next": "CAP_assessment" },
+        "on_pass": { "next": "different_patient" }
+      },
+      {
+        "id": "different_patient",
+        "on_fail": { "next": "randomised_since" },
+        "on_pass": { "next": "CAP_assessment_2" }
+      },
+      {
+        "id": "randomised_since",
+        "on_fail": { "next": "CAP_assessment" },
+        "on_pass": { "next": "CAP_assessment_2" }
+      },
+      {
+        "id": "CAP_assessment",
+        "on_fail": {
+          "next": "screened_patient"
+        },
+        "on_pass": { "outcome": "Registry" }
+      },
+      {
+        "id": "CAP_assessment_2",
+        "on_fail": {
+          "next": "screened_patient"
+        },
+        "on_pass": { "next": "REMAP_CAP_Platform_eligible" }
+      },
+      {
+        "id": "REMAP_CAP_Platform_eligible",
+        "on_fail": {
+          "next": "participating_registry_domain"
+        },
+        "on_pass": { "next": "domain_eligibility" }
+      },
+      {
+        "id": "participating_registry_domain",
+        "on_fail": { "outcome": "Registry", "message": "(Data linkage only)" },
+        "on_pass": {
+          "outcome": "Registry",
+          "message": "(additional data collection)"
+        }
+      },
+      {
+        "id": "domain_eligibility",
+        "on_pass": { "next": "regimen_matrix" }
+      },
+      {
+        "id": "regimen_matrix",
+        "on_fail": {
+          "next": "participating_registry_domain"
+        },
+        "on_pass": { "next": "consent" }
+      },
+      {
+        "id": "consent",
+        "on_fail": { "next": "participating_registry_domain" },
+        "on_pass": { "outcome": "Randomise" }
+      }
+    ]
+  }
+}

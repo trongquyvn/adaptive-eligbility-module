@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "@/context/AuthProvider";
 
 export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

@@ -13,16 +13,43 @@ export function RoundedRectangleNode({ data }: NodeProps) {
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
-        color: "black",
-        fontSize: "8px",
+        color: !data.message ? "black" : "var(--color-purple-600)",
+        fontWeight: !data.message ? "300" : "700",
+        fontSize: "6px",
+        padding: "2px",
       }}
     >
       {data.label}
-      {!data.first && (
+      {!data.message ? (
+        <>
+          {!data.first && (
+            <Handle
+              type="target"
+              position={Position.Left}
+              style={{ left: -3 }}
+            />
+          )}
+
+          {data.yes && (
+            <Handle
+              type="source"
+              id="yes"
+              position={Position.Right}
+              style={{ right: -3 }}
+            />
+          )}
+
+          {data.no && (
+            <Handle
+              type="source"
+              id="no"
+              position={Position.Bottom}
+              style={{ bottom: -3 }}
+            />
+          )}
+        </>
+      ) : (
         <Handle type="target" position={Position.Left} style={{ left: -3 }} />
-      )}
-      {!data.end && (
-        <Handle type="source" position={Position.Right} style={{ right: -3 }} />
       )}
     </div>
   );
@@ -51,7 +78,7 @@ export function LeftEnvelopeNode({ data }: NodeProps) {
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
-            fontSize: "8px",
+            fontSize: "6px",
             overflow: "hidden",
             color: "black",
             padding: "2px 2px 2px 12px",
@@ -88,7 +115,7 @@ export function RightEnvelopeNode({ data }: NodeProps) {
       <polygon
         points={`4,0 ${width - 15},0 ${width - 15},0 ${width},${height / 2} ${
           width - 15
-        },${height} 4,${height}`}
+        },${height - 2} 4,${height - 2}`}
         fill="transparent"
         stroke="black"
         strokeWidth={1}
@@ -103,10 +130,10 @@ export function RightEnvelopeNode({ data }: NodeProps) {
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
-            fontSize: "8px",
+            fontSize: "6px",
             overflow: "hidden",
             color: "black",
-            padding: "2px 12px 2px 2px",
+            padding: "2px 12px 2px 4px",
           }}
         >
           {data.label}
@@ -115,15 +142,24 @@ export function RightEnvelopeNode({ data }: NodeProps) {
             <Handle
               type="target"
               position={Position.Left}
-              style={{ left: 0 }}
+              style={{ left: 1 }}
             />
           )}
           {!data.end && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              style={{ right: -2 }}
-            />
+            <>
+              <Handle
+                type="source"
+                id="yes"
+                position={Position.Right}
+                style={{ right: -1 }}
+              />
+              <Handle
+                type="source"
+                id="no"
+                position={Position.Bottom}
+                style={{ bottom: -1 }}
+              />
+            </>
           )}
         </div>
       </foreignObject>
@@ -155,7 +191,7 @@ export function DiamondNode({ data }: NodeProps) {
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
-            fontSize: "8px",
+            fontSize: "4px",
             overflow: "hidden",
             color: "black",
           }}
