@@ -3,7 +3,8 @@ export default function RegimenTab() {
     <div>
       <h2 className="text-lg font-semibold mb-2">Regimen</h2>
       <p className="text-gray-600 text-sm">
-        Nội dung liên quan đến regimen sẽ được thêm ở đây.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore
       </p>
     </div>
   );
