@@ -3,7 +3,7 @@
 import React from "react";
 import ReactFlow, {
   // Background,
-  // Controls,
+  Controls,
   // MiniMap,
   Node,
   Edge,
@@ -23,7 +23,13 @@ const nodeTypes = {
   diamondNode: DiamondNode,
 };
 
-export default function PatientWorkflowFlow({ nodes, edges }: { nodes: Node[], edges: Edge[] }) {
+export default function PatientWorkflowFlow({
+  nodes,
+  edges,
+}: {
+  nodes: Node[];
+  edges: Edge[];
+}) {
   // Category info: name + vertical y position
   // const categories = [
   //   { id: "cat1", label: "Category 1", y: 50 },
@@ -50,33 +56,31 @@ export default function PatientWorkflowFlow({ nodes, edges }: { nodes: Node[], e
 
   // Edges: connect nodes
   // const edges: Edge[] = [
-    // {
-    //   id: "e1",
-    //   source: "A1",
-    //   target: "B1",
-    //   markerEnd: { type: MarkerType.Arrow },
-    // },
-    // {
-    //   id: "e2",
-    //   source: "B1",
-    //   target: "C1",
-    //   markerEnd: { type: MarkerType.Arrow },
-    // },
+  // {
+  //   id: "e1",
+  //   source: "A1",
+  //   target: "B1",
+  //   markerEnd: { type: MarkerType.Arrow },
+  // },
+  // {
+  //   id: "e2",
+  //   source: "B1",
+  //   target: "C1",
+  //   markerEnd: { type: MarkerType.Arrow },
+  // },
   // ];
 
   return (
-    <div className="flex-1 border h-[500px] overflow-auto bg-white">
-      <ReactFlow
-        nodes={nodes}
-        nodeTypes={nodeTypes}
-        edges={edges}
-        fitView
-        zoomOnScroll={false}
-      >
-        {/* <Background /> */}
-        {/* <MiniMap /> */}
-        {/* <Controls /> */}
-      </ReactFlow>
-    </div>
+    <ReactFlow
+      nodes={nodes}
+      nodeTypes={nodeTypes}
+      edges={edges}
+      fitView
+      zoomOnScroll={false}
+    >
+      {/* <Background /> */}
+      {/* <MiniMap /> */}
+      <Controls />
+    </ReactFlow>
   );
 }

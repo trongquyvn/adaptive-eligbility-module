@@ -16,6 +16,10 @@ const renderOutcome = (data: any) => {
 };
 
 const MyPatientWorkflowFlow = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
   const { rule } = usePatients();
   const flow = rule?.logic?.flow;
   const ruleNodes = rule?.logic?.nodes;
@@ -119,24 +123,123 @@ const MyPatientWorkflowFlow = () => {
     }
   });
 
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-
   useEffect(() => {
     getLayoutElements(rawNodes, rawEdges).then(({ nodes, edges }) => {
       setNodes(nodes);
       setEdges(edges);
     });
-  }, [rawNodes, rawEdges]);
+  }, []);
 
-  return <PatientWorkflowFlow nodes={nodes} edges={edges} />;
+  return (
+    <div className="relative">
+      <div className="absolute right-0 z-10">
+        <button
+          className="text-gray-500 hover:text-gray-700 cursor-pointer"
+          onClick={() => setIsOpen(true)}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div
+        className={
+          isOpen
+            ? "fixed inset-0 bg-black/80 flex justify-center items-center z-50"
+            : ""
+        }
+      >
+        <div
+          className={
+            isOpen
+              ? "bg-white rounded-lg h-full w-full p-6 relative"
+              : "h-[600px] overflow-auto bg-white"
+          }
+        >
+          <PatientWorkflowFlow nodes={nodes} edges={edges} />
+
+          {isOpen && (
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default function OverviewTab() {
+const JSONFile = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const { rule } = usePatients();
   const flow = rule?.logic?.flow;
   const ruleNodes = rule?.logic?.nodes;
 
+  return (
+    <div className="bg-gray-100 p-4 rounded relative">
+      <div className="absolute right-4 z-10">
+        <button
+          className="text-gray-500 hover:text-gray-700 cursor-pointer"
+          onClick={() => setIsOpen(true)}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div className="text-xl font-semibold">Flow</div>
+      <pre>{JSON.stringify(flow, null, 2)}</pre>
+      <br />
+      <div className="text-xl font-semibold">Rule</div>
+      <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
+
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg w-11/12 p-6 h-11/12 overflow-auto relative">
+            <div className="text-xl font-semibold">Flow</div>
+            <pre>{JSON.stringify(flow, null, 2)}</pre>
+            <br />
+            <div className="text-xl font-semibold">Rule</div>
+            <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="fixed top-2 right-2 cursor-pointer text-3xl"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function OverviewTab() {
   return (
     <div className="bg-white p-5">
       <div className="flex justify-between mb-5">
@@ -162,15 +265,7 @@ export default function OverviewTab() {
           {
             id: "json",
             label: "JSON File",
-            component: () => (
-              <div className="bg-gray-100 p-4 rounded">
-                <div className="text-xl font-semibold">Flow</div>
-                <pre>{JSON.stringify(flow, null, 2)}</pre>
-                <br />
-                <div className="text-xl font-semibold">Rule</div>
-                <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
-              </div>
-            ),
+            component: JSONFile,
           },
         ]}
       />
