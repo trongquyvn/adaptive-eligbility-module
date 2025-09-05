@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { Home, ClipboardList, Users, Target } from "lucide-react";
 
 const menu = [
-  { label: "Home", icon: Home, href: "/dashboard" },
+  { label: "Home", icon: Home, href: "/patient" },
   { label: "Roadmap", icon: ClipboardList, href: "/roadmap" },
-  { label: "Population", icon: Users, href: "/population" },
-  { label: "Objectives", icon: Target, href: "/objectives" },
+  // { label: "Population", icon: Users, href: "/population" },
+  // { label: "Objectives", icon: Target, href: "/objectives" },
 ];
 
 export default function Sidebar() {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import PatientTable from "@/components/PatientTable";
-import CreatePatientDialog from "@/components/CreatePatientDialog";
+import PatientTable from "@/components/patient/PatientTable";
+import CreatePatientDialog from "@/components/patient/CreatePatientDialog";
 
 interface Patient {
   id: string;

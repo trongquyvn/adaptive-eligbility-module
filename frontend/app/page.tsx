@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth } from '@/components/layout/AuthProvider';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');

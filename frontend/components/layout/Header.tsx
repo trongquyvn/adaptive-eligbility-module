@@ -43,7 +43,7 @@ export default function Header() {
               alt="User"
               className="w-10 h-10 rounded-full"
             />
-            <span className="text-gray-700">James Terry</span>
+            <span className="text-gray-700">Admin</span>
             <svg
               className={`w-4 h-4 text-gray-500 transition-transform ${
                 isDropdownOpen ? 'rotate-180' : ''

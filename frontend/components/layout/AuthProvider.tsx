@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isLoading) {
       // Redirect logic
       if (isAuthenticated && pathname === "/") {
-        router.push("/dashboard");
+        router.push("/patient");
       }
     }
   }, [isAuthenticated, pathname, router, isLoading]);

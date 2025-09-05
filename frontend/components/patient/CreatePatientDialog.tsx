@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Modal from "./Modal";
-import TagInput from "./TagInput";
-import SingleTagSelect from "./SingleTagSelect";
+import Modal from "../common/Modal";
+import TagInput from "../common/TagInput";
+import SingleTagSelect from "../common/SingleTagSelect";
 
 interface Patient {
   id: string;

@@ -1,4 +1,4 @@
-import PatientDetailPage from "@/components/PatientDetailPage";
+import PatientDetailPage from "@/components/patient/PatientDetailPage";
 import { API_BASE_URL } from "@/contanst";
 
 interface PatientDetailProps {
