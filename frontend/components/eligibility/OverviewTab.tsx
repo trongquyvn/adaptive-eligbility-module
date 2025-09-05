@@ -3,125 +3,139 @@ import PatientWorkflowFlow from "@/components/workflow/PatientWorkflowFlow";
 import TabsMenu from "@/components/common/TabsMenu";
 
 import { Edge, MarkerType, Node } from "react-flow-renderer";
+import getLayoutElements from "@/components/workflow/elk";
+import { useEffect, useState } from "react";
 
-// const getNode = (nodes: any, id: string) => nodes[id];
+const renderOutcome = (data: any) => {
+  return (
+    <div>
+      <div>{data?.outcome}</div>
+      {data?.message && <div>{data.message}</div>}
+    </div>
+  );
+};
 
 const MyPatientWorkflowFlow = () => {
   const { rule } = usePatients();
   const flow = rule?.logic?.flow;
-  console.log("flow: ", flow);
-  const nodes = rule?.logic?.nodes;
-  const nodeKeys = Object.keys(nodes);
+  const ruleNodes = rule?.logic?.nodes;
+  const nodeKeys = Object.keys(ruleNodes);
 
-  const getNodeFlow = (id: string) => {
-    return flow.find((e: any) => e.id === id);
-  };
+  const getNodeFlow = (id: string) => flow.find((e: any) => e.id === id);
 
-  const diagramNodes: Node[] = [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const rawNodes: Node[] = [];
   nodeKeys.forEach((e) => {
-    const defaultPo = { x: 70, y: 70 };
-
-    const getPo = (cate: any) => {
-      if (!diagramNodes.length) return defaultPo;
-      const nodeCates = diagramNodes.filter((e) => e.data.cate === cate);
-      const x =
-        defaultPo.x + nodeCates.length * 100 + nodeCates.length * defaultPo.x;
-      const y = parseInt(cate) * defaultPo.y;
-
-      return { x, y };
-    };
-
-    const position = getPo(nodes[e].cate);
+    const node = ruleNodes[e];
     const nodeFlow = getNodeFlow(e);
-    const node = {
+    const nodeNew = {
       id: e,
       type: "roundedRectangleNode",
       data: {
-        label: nodes[e].name,
-        cate: nodes[e].cate,
+        label: node.name,
+        cate: node.cate,
         first: nodeFlow?.start,
         yes: nodeFlow?.on_pass,
         no: nodeFlow?.on_fail,
       },
-      position,
+      position: { x: 0, y: 0 },
     };
-    diagramNodes.push(node);
+    rawNodes.push(nodeNew);
 
     if (nodeFlow?.on_pass?.outcome) {
-      diagramNodes.push({
-        id: e + "on_pass",
+      rawNodes.push({
+        id: e + "_on_pass",
         type: "roundedRectangleNode",
         data: {
-          label: nodeFlow?.on_pass?.outcome,
+          label: renderOutcome(nodeFlow?.on_pass),
           message: true,
         },
-        position: {
-          x: node.position.x + 150,
-          y: node.position.y + 50,
-        },
+        position: { x: 0, y: 0 },
       });
     }
 
     if (nodeFlow?.on_fail?.outcome) {
-      diagramNodes.push({
-        id: e + "on_fail",
+      rawNodes.push({
+        id: e + "_on_fail",
         type: "roundedRectangleNode",
         data: {
-          label: nodeFlow?.on_fail?.outcome,
+          label: renderOutcome(nodeFlow?.on_fail),
           message: true,
         },
-        position: {
-          x: node.position.x + 150,
-          y: node.position.y + 50,
-        },
+        position: { x: 0, y: 0 },
       });
     }
   });
 
-  const edges: Edge[] = [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const rawEdges: Edge[] = [];
   flow.forEach((e: any, i: number) => {
-    const edge = {
-      id: "e" + i,
-      source: e.id,
-      target: e?.on_pass?.next,
-      markerEnd: { type: MarkerType.Arrow },
-    };
+    if (e?.on_fail?.outcome) {
+      const edge = {
+        id: "e" + i + "_fail_outcome",
+        source: e.id,
+        sourceHandle: "yes",
+        target: e.id + "_on_fail",
+        markerEnd: { type: MarkerType.Arrow },
+      };
 
-    edges.push(edge);
+      rawEdges.push(edge);
+    }
+
+    if (e?.on_fail?.next) {
+      const edge = {
+        id: "e" + i + "_on_fail",
+        source: e.id,
+        sourceHandle: "no",
+        target: e?.on_fail?.next,
+        markerEnd: { type: MarkerType.Arrow },
+      };
+
+      rawEdges.push(edge);
+    }
+
+    if (e?.on_pass?.outcome) {
+      const edge = {
+        id: "e" + i + "_pass_outcome",
+        source: e.id,
+        sourceHandle: "yes",
+        target: e.id + "_on_pass",
+        markerEnd: { type: MarkerType.Arrow },
+      };
+
+      rawEdges.push(edge);
+    }
+
+    if (e?.on_pass?.next) {
+      const edge = {
+        id: "e" + i + "_on_pass",
+        source: e.id,
+        sourceHandle: "yes",
+        target: e?.on_pass?.next,
+        markerEnd: { type: MarkerType.Arrow },
+      };
+
+      rawEdges.push(edge);
+    }
   });
 
-  console.log("edges: ", edges);
-  return <PatientWorkflowFlow nodes={diagramNodes} edges={edges} />;
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
+  useEffect(() => {
+    getLayoutElements(rawNodes, rawEdges).then(({ nodes, edges }) => {
+      setNodes(nodes);
+      setEdges(edges);
+    });
+  }, [rawNodes, rawEdges]);
+
+  return <PatientWorkflowFlow nodes={nodes} edges={edges} />;
 };
 
 export default function OverviewTab() {
-  // const nodes: Node[] = [
-  //   {
-  //     id: "A1",
-  //     type: "roundedRectangleNode",
-  //     data: { label: "Patient Registration" },
-  //     position: { x: 150, y: categories[0].y },
-  //   },
-  // ];
-  // const edges: Edge[] = [
-  // {
-  //   id: "e1",
-  //   source: "A1",
-  //   target: "B1",
-  //   markerEnd: { type: MarkerType.Arrow },
-  // },
-  // {
-  //   id: "e2",
-  //   source: "B1",
-  //   target: "C1",
-  //   markerEnd: { type: MarkerType.Arrow },
-  // },
-  // ];
-
-  // const edges = [
-  //   { id: "e1", source: "decision", sourceHandle: "yes", target: "node2", type: "smoothstep" },
-  //   { id: "e2", source: "decision", sourceHandle: "no", target: "node3", type: "smoothstep" },
-  // ];
+  const { rule } = usePatients();
+  const flow = rule?.logic?.flow;
+  const ruleNodes = rule?.logic?.nodes;
 
   return (
     <div className="bg-white p-5">
@@ -145,7 +159,19 @@ export default function OverviewTab() {
             label: "Visual Diagram",
             component: MyPatientWorkflowFlow,
           },
-          { id: "json", label: "JSON File", component: () => <></> },
+          {
+            id: "json",
+            label: "JSON File",
+            component: () => (
+              <div className="bg-gray-100 p-4 rounded">
+                <div className="text-xl font-semibold">Flow</div>
+                <pre>{JSON.stringify(flow, null, 2)}</pre>
+                <br />
+                <div className="text-xl font-semibold">Rule</div>
+                <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
+              </div>
+            ),
+          },
         ]}
       />
     </div>

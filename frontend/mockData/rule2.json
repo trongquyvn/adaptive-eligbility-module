@@ -74,7 +74,7 @@
       },
       "REMAP_CAP_Platform_eligible": {
         "name": "REMAP-CAP Platform eligible",
-        "cate": "2",
+        "cate": "3",
         "type": "BOOLEAN",
         "left": { "var": "cap.assessment" },
         "reason_on_fail": "REMAP_CAP_Platform_eligible"
@@ -144,19 +144,10 @@
     },
     "flow": [
       {
-        "id": "patient_check_eCRF",
-        "on_pass": { "next": "database_checking" },
-        "start": true
-      },
-      {
-        "id": "database_checking",
-        "on_fail": { "next": "CAP_assessment" },
-        "on_pass": { "next": "different_patient" }
-      },
-      {
         "id": "different_patient",
         "on_fail": { "next": "randomised_since" },
-        "on_pass": { "next": "CAP_assessment_2" }
+        "on_pass": { "next": "CAP_assessment_2" },
+        "start": true
       },
       {
         "id": "randomised_since",
@@ -164,49 +155,11 @@
         "on_pass": { "next": "CAP_assessment_2" }
       },
       {
-        "id": "CAP_assessment",
-        "on_fail": {
-          "next": "screened_patient"
-        },
-        "on_pass": { "outcome": "Registry" }
-      },
-      {
         "id": "CAP_assessment_2",
         "on_fail": {
           "next": "screened_patient"
         },
         "on_pass": { "next": "REMAP_CAP_Platform_eligible" }
-      },
-      {
-        "id": "REMAP_CAP_Platform_eligible",
-        "on_fail": {
-          "next": "participating_registry_domain"
-        },
-        "on_pass": { "next": "domain_eligibility" }
-      },
-      {
-        "id": "participating_registry_domain",
-        "on_fail": { "outcome": "Registry", "message": "(Data linkage only)" },
-        "on_pass": {
-          "outcome": "Registry",
-          "message": "(additional data collection)"
-        }
-      },
-      {
-        "id": "domain_eligibility",
-        "on_pass": { "next": "regimen_matrix" }
-      },
-      {
-        "id": "regimen_matrix",
-        "on_fail": {
-          "next": "participating_registry_domain"
-        },
-        "on_pass": { "next": "consent" }
-      },
-      {
-        "id": "consent",
-        "on_fail": { "next": "participating_registry_domain" },
-        "on_pass": { "outcome": "Randomise" }
       }
     ]
   }

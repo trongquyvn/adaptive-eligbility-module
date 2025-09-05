@@ -1,7 +1,29 @@
 import React from "react";
 import { NodeProps, Handle, Position } from "react-flow-renderer";
 
+const handleCss = {
+  opacity: 0,
+};
+
 export function RoundedRectangleNode({ data }: NodeProps) {
+  let customCss = {};
+  if (data.message) {
+    customCss = {
+      border: "var(--color-purple-600) 1px solid",
+      backgroundColor: "var(--color-purple-600)",
+      color: "white",
+      fontWeight: "700",
+    };
+  }
+
+  if (data.first) {
+    customCss = {
+      border: "var(--color-blue-700) 2px solid",
+      color: "var(--color-blue-700)",
+      fontWeight: "700",
+    };
+  }
+
   return (
     <div
       style={{
@@ -13,44 +35,33 @@ export function RoundedRectangleNode({ data }: NodeProps) {
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
-        color: !data.message ? "black" : "var(--color-purple-600)",
-        fontWeight: !data.message ? "300" : "700",
+        color: "black",
         fontSize: "6px",
         padding: "2px",
+        ...customCss,
       }}
     >
       {data.label}
-      {!data.message ? (
-        <>
-          {!data.first && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              style={{ left: -3 }}
-            />
-          )}
 
-          {data.yes && (
-            <Handle
-              type="source"
-              id="yes"
-              position={Position.Right}
-              style={{ right: -3 }}
-            />
-          )}
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ left: -3, ...handleCss }}
+      />
 
-          {data.no && (
-            <Handle
-              type="source"
-              id="no"
-              position={Position.Bottom}
-              style={{ bottom: -3 }}
-            />
-          )}
-        </>
-      ) : (
-        <Handle type="target" position={Position.Left} style={{ left: -3 }} />
-      )}
+      <Handle
+        type="source"
+        id="yes"
+        position={Position.Right}
+        style={{ right: -3, ...handleCss }}
+      />
+
+      <Handle
+        type="source"
+        id="no"
+        position={Position.Bottom}
+        style={{ bottom: -3, ...handleCss }}
+      />
     </div>
   );
 }
