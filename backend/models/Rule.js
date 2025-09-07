@@ -8,7 +8,7 @@ const VariableSchema = new mongoose.Schema(
     path: String,
     unit: String,
     nullable: Boolean,
-    codes: { type: Map, of: Number },
+    codes: mongoose.Schema.Types.Mixed,
   },
   { _id: false }
 );
@@ -30,14 +30,13 @@ const RegimenSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const LogicNodeSchema = new mongoose.Schema({}, { strict: false, _id: false });
+// const LogicNodeSchema = new mongoose.Schema({}, { strict: false, _id: false });
 
 const FlowSchema = new mongoose.Schema(
   {
     id: String,
-    on_fail: { outcome: String, code: String },
-    on_pass: { outcome: String, code: String },
-    next: String,
+    on_fail: { outcome: String, code: String, next: String },
+    on_pass: { outcome: String, code: String, next: String },
   },
   { _id: false }
 );
@@ -57,11 +56,12 @@ const RuleSchema = new mongoose.Schema(
       author: String,
       created_at: Date,
     },
+    variable: VariableSchema,
     domain_catalog: [DomainSchema],
     regimen_catalog: [RegimenSchema],
     logic: {
       root: String,
-      nodes: mongoose.Schema.Types.Mixed,  
+      nodes: mongoose.Schema.Types.Mixed,
       flow: [FlowSchema],
     },
   },

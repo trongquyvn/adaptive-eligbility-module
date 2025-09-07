@@ -1,11 +1,8 @@
-async function patientExists(patientId) {
-  // TODO: replace with actual Patient model query
-  // Example:
-  // const existing = await Patient.findOne({ patient_id: patientId });
-  // return !!existing;
+const Patient = require("./models/Patient");
 
-  // Mock implementation: always return false (patient does not exist)
-  return false;
+async function patientExists(patientId) {
+  const exists = await Patient.exists({ patient_id: patientId });
+  return !!exists;
 }
 
 module.exports = {

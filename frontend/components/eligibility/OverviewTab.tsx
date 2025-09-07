@@ -27,47 +27,57 @@ const MyPatientWorkflowFlow = () => {
 
   const getNodeFlow = (id: string) => flow.find((e: any) => e.id === id);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  function isNodeInFlow(nodeId: string) {
+    return flow.some((step: any) => {
+      if (step.id === nodeId) return true;
+      if (step.on_pass && step.on_pass.next === nodeId) return true;
+      if (step.on_fail && step.on_fail.next === nodeId) return true;
+      return false;
+    });
+  }
   const rawNodes: Node[] = [];
   nodeKeys.forEach((e) => {
-    const node = ruleNodes[e];
-    const nodeFlow = getNodeFlow(e);
-    const nodeNew = {
-      id: e,
-      type: "roundedRectangleNode",
-      data: {
-        label: node.name,
-        cate: node.cate,
-        first: nodeFlow?.start,
-        yes: nodeFlow?.on_pass,
-        no: nodeFlow?.on_fail,
-      },
-      position: { x: 0, y: 0 },
-    };
-    rawNodes.push(nodeNew);
+    if (isNodeInFlow(e)) {
+      const node = ruleNodes[e];
+      const nodeFlow = getNodeFlow(e);
 
-    if (nodeFlow?.on_pass?.outcome) {
-      rawNodes.push({
-        id: e + "_on_pass",
+      const nodeNew = {
+        id: e,
         type: "roundedRectangleNode",
         data: {
-          label: renderOutcome(nodeFlow?.on_pass),
-          message: true,
+          label: node.name,
+          cate: node.cate,
+          first: nodeFlow?.start,
+          yes: nodeFlow?.on_pass,
+          no: nodeFlow?.on_fail,
         },
         position: { x: 0, y: 0 },
-      });
-    }
+      };
+      rawNodes.push(nodeNew);
 
-    if (nodeFlow?.on_fail?.outcome) {
-      rawNodes.push({
-        id: e + "_on_fail",
-        type: "roundedRectangleNode",
-        data: {
-          label: renderOutcome(nodeFlow?.on_fail),
-          message: true,
-        },
-        position: { x: 0, y: 0 },
-      });
+      if (nodeFlow?.on_pass?.outcome) {
+        rawNodes.push({
+          id: e + "_on_pass",
+          type: "roundedRectangleNode",
+          data: {
+            label: renderOutcome(nodeFlow?.on_pass),
+            message: true,
+          },
+          position: { x: 0, y: 0 },
+        });
+      }
+
+      if (nodeFlow?.on_fail?.outcome) {
+        rawNodes.push({
+          id: e + "_on_fail",
+          type: "roundedRectangleNode",
+          data: {
+            label: renderOutcome(nodeFlow?.on_fail),
+            message: true,
+          },
+          position: { x: 0, y: 0 },
+        });
+      }
     }
   });
 

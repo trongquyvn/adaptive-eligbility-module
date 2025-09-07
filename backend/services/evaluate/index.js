@@ -6,7 +6,8 @@ function getValueByPath(obj, path) {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 }
 
-function resolveVariable(varDef, patientData) {
+// ------------------ RESOLVE VARIABLE ------------------
+function resolveVariable(varDef, patientData, nodeType) {
   if (!varDef || !varDef.var) {
     return { value: null, id: null };
   }
@@ -17,18 +18,18 @@ function resolveVariable(varDef, patientData) {
     return { value: null, id: varDef.var };
   }
 
-  switch (varDef.type) {
-    case "number":
-      return { value: Number(rawValue), id: varDef.var };
-    case "datetime":
-      return { value: new Date(rawValue), id: varDef.var };
-    case "boolean":
+  switch (nodeType) {
+    case "BOOLEAN":
+    case "DATABASE":
+    case "NOT":
       return { value: Boolean(rawValue), id: varDef.var };
-    case "code":
-      if (varDef.codes && rawValue in varDef.codes) {
-        return { value: varDef.codes[rawValue], id: varDef.var };
-      }
-      return { value: rawValue, id: varDef.var };
+
+    case "COMPARE":
+      return { value: Number(rawValue), id: varDef.var };
+
+    case "TIME_WINDOW":
+      return { value: new Date(rawValue), id: varDef.var };
+
     default:
       return { value: rawValue, id: varDef.var };
   }
@@ -54,7 +55,11 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
   }
 
   if (t === "COMPARE") {
-    const { value: left, id } = resolveVariable(node.left, patientData);
+    const { value: left, id } = resolveVariable(
+      node.input,
+      patientData,
+      node.type
+    );
     if (left === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -84,7 +89,7 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
   }
 
   if (t === "BOOLEAN" || t === "DATABASE") {
-    const { value, id } = resolveVariable(node.input, patientData);
+    const { value, id } = resolveVariable(node.input, patientData, node.type);
     if (value === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -92,7 +97,7 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
   }
 
   if (t === "NOT") {
-    const { value, id } = resolveVariable(node.input, patientData);
+    const { value, id } = resolveVariable(node.input, patientData, node.type);
     if (value === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -125,7 +130,11 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
 
   if (t === "TIME_WINDOW") {
     const now = new Date(patientData.now || Date.now());
-    const { value: left, id } = resolveVariable(node.left, patientData);
+    const { value: left, id } = resolveVariable(
+      node.input,
+      patientData,
+      node.type
+    );
 
     if (left === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
@@ -152,15 +161,12 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
 
   if (t === "MAP") {
     if (!ctx.eligible_domains) ctx.eligible_domains = [];
-    console.log("ctx.eligible_domains: ", ctx.eligible_domains);
-
     for (const item of node.items) {
       const res = evaluateNode(item.rule, patientData, ruleDoc, ctx);
       if (res) {
         ctx.eligible_domains.push(item.domain_id);
       }
     }
-
     return true;
   }
 
@@ -189,11 +195,10 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
           );
 
           if (excluded) {
-            // add reason if specified
             if (constraint.reason_on_exclude) {
               ctx.key_reasons.push(constraint.reason_on_exclude);
             }
-            return false; // remove this regimen
+            return false;
           }
           return true;
         });
@@ -244,7 +249,6 @@ function evaluateByFlow(patientData, ruleDoc) {
     const result = evaluateNode(node, patientData, ruleDoc, ctx);
 
     if (result) {
-      // pass
       if (currentStep.next) {
         currentStep = ruleDoc.logic.flow.find((f) => f.id === currentStep.next);
       } else if (currentStep.on_pass && currentStep.on_pass.outcome) {
@@ -254,7 +258,6 @@ function evaluateByFlow(patientData, ruleDoc) {
         break;
       }
     } else {
-      // fail
       if (currentStep.on_fail && currentStep.on_fail.outcome) {
         finalOutcome = currentStep.on_fail.outcome;
         finalCode = currentStep.on_fail.code || null;

@@ -40,50 +40,64 @@
         "name": "Are they already in the database",
         "cate": "1",
         "type": "DATABASE",
-        "input": { "var": "database.status" },
+        "input": { "var": "database" },
         "reason_on_fail": "Patient has not in database"
       },
       "different_patient": {
         "name": "It is a different patient",
         "cate": "1",
         "type": "BOOLEAN",
-        "input": { "var": "new", "type": "boolean" },
+        "input": { "var": "new" },
         "reason_on_fail": "different_patient"
       },
       "randomised_since": {
         "name": "Has it been more than 90 days since they were randomised",
         "cate": "2",
         "type": "TIME_WINDOW",
-        "left": { "var": "support.started_time" },
+        "input": { "var": "support.started_time" },
         "window": { "max_hours_since": 90 },
         "reason_on_fail": "randomised_sine"
       },
       "CAP_assessment": {
-        "name": "CAP assessment",
+        "name": "CAP clinical feature",
         "cate": "2",
-        "type": "BOOLEAN",
-        "left": { "var": "cap.assessment" },
+        "type": "ANY",
+        "children": ["feat_fever", "feat_cough", "feat_dyspnoea"],
         "reason_on_fail": "CAP_assessment"
       },
-      "CAP_assessment_2": {
-        "name": "CAP assessment 2",
-        "cate": "2",
+      "feat_fever": {
+        "name": "CAP fever",
         "type": "BOOLEAN",
-        "left": { "var": "cap.assessment" },
-        "reason_on_fail": "CAP_assessment"
+        "input": { "var": "cap.fever" }
+      },
+      "feat_cough": {
+        "name": "CAP cough",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.cough" }
+      },
+      "feat_dyspnoea": {
+        "name": "CAP dyspnoea",
+        "type": "BOOLEAN",
+        "input": { "var": "cap.dyspnoea" }
+      },
+      "pregnancy_ok": {
+        "name": "Pregnancy",
+        "type": "NOT",
+        "input": { "var": "pregnancy.status" },
+        "reason_on_fail": "Pregnancy excludes from ABX domain"
       },
       "REMAP_CAP_Platform_eligible": {
         "name": "REMAP-CAP Platform eligible",
         "cate": "2",
         "type": "BOOLEAN",
-        "left": { "var": "cap.assessment" },
+        "input": { "var": "cap.assessment" },
         "reason_on_fail": "REMAP_CAP_Platform_eligible"
       },
       "participating_registry_domain": {
         "name": "Is the site participating in the Registry domain",
         "cate": "3",
         "type": "BOOLEAN",
-        "left": { "var": "cap.assessment" },
+        "input": { "var": "cap.registry" },
         "reason_on_fail": "participating_registry_domain"
       },
       "domain_eligibility": {
@@ -95,17 +109,45 @@
             "domain_id": "antibiotics",
             "rule": {
               "type": "ANY",
-              "children": ["CAP_assessment", "REMAP_CAP_Platform_eligible"]
+              "children": ["antibiotics_1", "antibiotics_2"]
             }
           },
           {
             "domain_id": "steroids",
             "rule": {
               "type": "ANY",
-              "children": ["CAP_assessment", "REMAP_CAP_Platform_eligible"]
+              "children": ["steroids_1", "steroids_2"]
             }
           }
         ]
+      },
+      "antibiotics_1": {
+        "name": "Antibiotics 1",
+        "type": "COMPARE",
+        "operator": ">",
+        "input": { "var": "antibiotics_1" },
+        "right": { "const": 10 }
+      },
+      "antibiotics_2": {
+        "name": "Antibiotics 2",
+        "type": "COMPARE",
+        "operator": ">",
+        "input": { "var": "antibiotics_2" },
+        "right": { "const": 20 }
+      },
+      "steroids_1": {
+        "name": "Steroids 1",
+        "type": "COMPARE",
+        "operator": ">",
+        "input": { "var": "steroids_1" },
+        "right": { "const": 10 }
+      },
+      "steroids_2": {
+        "name": "Steroids 2",
+        "type": "COMPARE",
+        "operator": ">",
+        "input": { "var": "steroids_2" },
+        "right": { "const": 20 }
       },
       "regimen_matrix": {
         "name": "Eligible for 2 or more REGIMEN",
@@ -127,18 +169,25 @@
         "require_min_regimens": 2,
         "reason_on_fail": "NER – no eligible regimen set"
       },
+      "shock_or_severe": {
+        "name": "Shock or Severe",
+        "type": "COMPARE",
+        "operator": "<=",
+        "input": { "var": "phys" },
+        "right": { "const": 150 }
+      },
       "consent": {
         "name": "Do we need consent",
         "cate": "5",
         "type": "BOOLEAN",
-        "left": { "var": "consent.required" },
+        "input": { "var": "consent.required" },
         "reason_on_fail": "consent"
       },
       "screened_patient": {
         "name": "Master List of screened patient's",
         "type": "BOOLEAN",
         "cate": "6",
-        "left": { "var": "consent.required" },
+        "input": { "var": "consent.required" },
         "reason_on_fail": "screened patient"
       }
     },
@@ -156,12 +205,12 @@
       {
         "id": "different_patient",
         "on_fail": { "next": "randomised_since" },
-        "on_pass": { "next": "CAP_assessment_2" }
+        "on_pass": { "next": "pregnancy_ok" }
       },
       {
         "id": "randomised_since",
         "on_fail": { "next": "CAP_assessment" },
-        "on_pass": { "next": "CAP_assessment_2" }
+        "on_pass": { "next": "pregnancy_ok" }
       },
       {
         "id": "CAP_assessment",
@@ -171,10 +220,15 @@
         "on_pass": { "outcome": "Registry" }
       },
       {
-        "id": "CAP_assessment_2",
+        "id": "pregnancy_ok",
         "on_fail": {
-          "next": "screened_patient"
+          "next": "shock_or_severe"
         },
+        "on_pass": { "next": "REMAP_CAP_Platform_eligible" }
+      },
+      {
+        "id": "shock_or_severe",
+        "on_fail": { "outcome": "Registry" },
         "on_pass": { "next": "REMAP_CAP_Platform_eligible" }
       },
       {
