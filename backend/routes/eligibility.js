@@ -3,8 +3,7 @@ const { evaluate } = require("../services/evaluate");
 const EvaluationLog = require("../models/EvaluationLog");
 const Rule = require("../models/Rule");
 const router = express.Router();
-
-// const rule = require("../testData/ruleTest.json");
+const testRule = require("../data/rule1.json");
 
 /**
  * POST /check
@@ -66,6 +65,7 @@ router.post("/check", async (req, res) => {
     };
 
     // Run evaluate (overrides handled inside)
+    // const result = await evaluate(patient, testRule, mode || "flow");
     const result = await evaluate(patient, rule.toObject(), mode || "flow");
     res.json(result);
   } catch (err) {

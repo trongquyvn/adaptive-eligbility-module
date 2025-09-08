@@ -1,36 +1,32 @@
 {
   "info": {
-    "name": "Adaptive Eligibility POC Tests",
-    "_postman_id": "b1c2d3e4-f5a6-7890-bcde-ff1234567890",
-    "description": "POC Eligibility API tests with auto validation",
+    "name": "Eligibility Check API",
+    "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+    "description": "Test cases for /check API with mock rule.js",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Case 1 - Eligible",
+      "name": "Case 1 - Missing required fields",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": {
-          "raw": "http://localhost:3000/eligibility/check",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["eligibility", "check"]
-        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"patientId\": \"P100\",\n  \"age\": 30,\n  \"icu_admit_time\": \"2025-08-25T15:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
-        }
+          "raw": "{}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
       },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Should be Eligible\", function () {",
-              "  pm.expect(pm.response.json().outcome).to.eql(\"Eligible\");",
-              "  pm.expect(pm.response.json().reasonsFailed).to.eql([]);",
+              "pm.test(\"Status code is 400\", () => {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Error message returned\", () => {",
+              "  pm.expect(pm.response.json().error).to.include(\"required\");",
               "});"
             ]
           }
@@ -38,31 +34,26 @@
       ]
     },
     {
-      "name": "Case 2 - Fail (Age < 18)",
+      "name": "Case 2 - Invalid jurisdiction",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": {
-          "raw": "http://localhost:3000/eligibility/check",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["eligibility", "check"]
-        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"patientId\": \"P101\",\n  \"age\": 16,\n  \"icu_admit_time\": \"2025-08-25T15:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
-        }
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"US\",\n  \"patient_id\": \"p001\",\n  \"data\": {}\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
       },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Should fail because Age < 18\", function () {",
-              "  var json = pm.response.json();",
-              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
-              "  pm.expect(json.reasonsFailed).to.include(\"Age < 18\");",
+              "pm.test(\"Status code is 400\", () => {",
+              "  pm.response.to.have.status(400);",
+              "});",
+              "pm.test(\"Jurisdiction error returned\", () => {",
+              "  pm.expect(pm.response.json().error).to.include(\"Jurisdiction\");",
               "});"
             ]
           }
@@ -70,31 +61,27 @@
       ]
     },
     {
-      "name": "Case 3 - Fail (ICU admission > 24h)",
+      "name": "Case 3 - Patient eligible (happy path)",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": {
-          "raw": "http://localhost:3000/eligibility/check",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["eligibility", "check"]
-        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"patientId\": \"P102\",\n  \"age\": 50,\n  \"icu_admit_time\": \"2025-08-24T05:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": true,\n  \"renal_failure\": false\n}"
-        }
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p002\",\n  \"now\": \"2025-09-01T00:00:00Z\",\n  \"data\": {\n    \"eCRF\": true,\n    \"new\": true,\n    \"cap\": {\"fever\": true},\n    \"pregnancy\": {\"status\": false},\n    \"consent\": {\"required\": true},\n    \"support\": {\"started_time\": \"2025-05-01T00:00:00Z\"},\n    \"database\": false\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
       },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Should fail because ICU admission > 24h\", function () {",
-              "  var json = pm.response.json();",
-              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
-              "  pm.expect(json.reasonsFailed).to.include(\"ICU admission too long ago (>24h)\");",
+              "pm.test(\"Status code is 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Eligible outcome\", () => {",
+              "  const json = pm.response.json();",
+              "  pm.expect(json.status).to.be.oneOf([\"Eligible\",\"Randomise\"]);",
               "});"
             ]
           }
@@ -102,31 +89,129 @@
       ]
     },
     {
-      "name": "Case 4 - Fail (Consent not obtained)",
+      "name": "Case 4 - Pending (missing variable)",
       "request": {
         "method": "POST",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": {
-          "raw": "http://localhost:3000/eligibility/check",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["eligibility", "check"]
-        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"patientId\": \"P103\",\n  \"age\": 40,\n  \"icu_admit_time\": \"2025-08-25T20:00:00Z\",\n  \"now\": \"2025-08-26T10:00:00Z\",\n  \"consent\": false,\n  \"renal_failure\": false\n}"
-        }
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p003\",\n  \"data\": {\n    \"eCRF\": true,\n    \"cap\": {\"cough\": true}\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
       },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test(\"Should fail because no consent\", function () {",
-              "  var json = pm.response.json();",
-              "  pm.expect(json.outcome).to.eql(\"Not Eligible\");",
-              "  pm.expect(json.reasonsFailed).to.include(\"Consent not obtained\");",
+              "pm.test(\"Status code is 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Pending status when missing data\", () => {",
+              "  pm.expect(pm.response.json().status).to.eql(\"Pending\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 5 - Not eligible (pregnancy true)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p004\",\n  \"data\": {\n    \"eCRF\": true,\n    \"new\": true,\n    \"pregnancy\": {\"status\": true},\n    \"cap\": {\"fever\": true},\n    \"consent\": {\"required\": true},\n    \"support\": {\"started_time\": \"2025-05-01T00:00:00Z\"}\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Not eligible due to pregnancy\", () => {",
+              "  pm.expect(pm.response.json().status).to.eql(\"Not Eligible\");",
+              "  pm.expect(pm.response.json().key_reasons).to.include(\"Pregnancy excludes from ABX domain\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 6 - Registry outcome (CAP fail)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p005\",\n  \"data\": {\n    \"eCRF\": true,\n    \"new\": true,\n    \"cap\": {\"fever\": false, \"cough\": false, \"dyspnoea\": false},\n    \"pregnancy\": {\"status\": false},\n    \"support\": {\"started_time\": \"2025-05-01T00:00:00Z\"},\n    \"consent\": {\"required\": true}\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Registry outcome\", () => {",
+              "  pm.expect(pm.response.json().status).to.eql(\"Registry\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 7 - Registry outcome (shock_or_severe)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p006\",\n  \"data\": {\n    \"eCRF\": true,\n    \"new\": true,\n    \"cap\": {\"fever\": true},\n    \"pregnancy\": {\"status\": false},\n    \"phys\": 120,\n    \"support\": {\"started_time\": \"2025-05-01T00:00:00Z\"},\n    \"consent\": {\"required\": true}\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Outcome should be Registry\", () => {",
+              "  pm.expect(pm.response.json().status).to.eql(\"Registry\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case 8 - Randomise outcome",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"trial_id\": \"remap-cap\",\n  \"trial_version\": \"v2.4\",\n  \"jurisdiction\": \"AU\",\n  \"patient_id\": \"p007\",\n  \"now\": \"2025-09-01T00:00:00Z\",\n  \"data\": {\n    \"eCRF\": true,\n    \"new\": true,\n    \"cap\": {\"fever\": true},\n    \"pregnancy\": {\"status\": false},\n    \"consent\": {\"required\": true},\n    \"support\": {\"started_time\": \"2025-05-01T00:00:00Z\"},\n    \"antibiotics_1\": 30,\n    \"antibiotics_2\": 50,\n    \"steroids_1\": 15,\n    \"steroids_2\": 25\n  }\n}"
+        },
+        "url": "http://localhost:3000/eligibility/check"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });",
+              "pm.test(\"Outcome should be Randomise\", () => {",
+              "  pm.expect(pm.response.json().status).to.eql(\"Randomise\");",
               "});"
             ]
           }

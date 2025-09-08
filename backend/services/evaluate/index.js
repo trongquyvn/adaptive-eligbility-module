@@ -248,22 +248,19 @@ function evaluateByFlow(patientData, ruleDoc) {
     const node = ruleDoc.logic.nodes[currentStep.id];
     const result = evaluateNode(node, patientData, ruleDoc, ctx);
 
-    if (result) {
-      if (currentStep.next) {
-        currentStep = ruleDoc.logic.flow.find((f) => f.id === currentStep.next);
-      } else if (currentStep.on_pass && currentStep.on_pass.outcome) {
-        finalOutcome = currentStep.on_pass.outcome;
-        finalCode = currentStep.on_pass.code || null;
+    const branch = result ? currentStep.on_pass : currentStep.on_fail;
+
+    if (branch) {
+      if (branch.next) {
+        currentStep = ruleDoc.logic.flow.find((f) => f.id === branch.next);
+      } else if (branch.outcome) {
+        finalOutcome = branch.outcome;
+        finalCode = branch.code || null;
       } else {
         break;
       }
     } else {
-      if (currentStep.on_fail && currentStep.on_fail.outcome) {
-        finalOutcome = currentStep.on_fail.outcome;
-        finalCode = currentStep.on_fail.code || null;
-      } else {
-        break;
-      }
+      break;
     }
   }
 
@@ -287,11 +284,7 @@ async function evaluate(patientData, ruleDoc, mode = "flow") {
 
   if (hasDatabaseNode) {
     const exists = await patientExists(patientData.patient_id);
-
-    if (!patientData.data.database) {
-      patientData.data.database = {};
-    }
-    patientData.data.database.status = exists;
+    patientData.data.database = exists;
   }
 
   const coreResult =
