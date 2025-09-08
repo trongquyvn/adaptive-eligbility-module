@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PatientTable from "@/components/patient/PatientTable";
 import CreatePatientDialog from "@/components/patient/CreatePatientDialog";
+import { usePatients } from "@/context/PatientContext";
 
 interface Patient {
   id: string;
@@ -12,13 +13,17 @@ interface Patient {
 }
 
 export default function DashboardPage() {
+  const { patients: initPatients } = usePatients();
+  console.log('initPatients: ', initPatients);
+
   const [patients, setPatients] = useState<Patient[]>([
     { id: "#123A", site: "Site A", date: "00/00/0000", status: "Eligible" },
     { id: "#123B", site: "Site A", date: "00/00/0000", status: "Ineligible" },
     { id: "#123C", site: "Site A", date: "00/00/0000", status: "Pending" },
   ]);
 
-  const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] = useState(false);
+  const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
+    useState(false);
 
   const handleCreatePatient = () => {
     setIsCreatePatientModalOpen(true);
@@ -26,14 +31,18 @@ export default function DashboardPage() {
 
   const handleCreatePatientSubmit = (patientData: Omit<Patient, "id">) => {
     // Generate patient ID
-    const patientId = `#${Math.floor(Math.random() * 10000).toString().padStart(3, '0')}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
-    
+    const patientId = `#${Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(3, "0")}${String.fromCharCode(
+      65 + Math.floor(Math.random() * 26)
+    )}`;
+
     const newPatient: Patient = {
       id: patientId,
       ...patientData,
     };
 
-    setPatients(prev => [...prev, newPatient]);
+    setPatients((prev) => [...prev, newPatient]);
     setIsCreatePatientModalOpen(false);
   };
 

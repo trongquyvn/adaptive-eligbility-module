@@ -3,6 +3,7 @@
 import { useState } from "react";
 import PatientTable from "@/components/patient/PatientTable";
 import CreatePatientDialog from "@/components/patient/CreatePatientDialog";
+import { usePatients } from "@/context/PatientContext";
 
 interface Patient {
   id: string;
@@ -12,11 +13,18 @@ interface Patient {
 }
 
 export default function PatientPage() {
-  const [patients, setPatients] = useState<Patient[]>([
-    { id: "#123A", site: "Site A", date: "00/00/0000", status: "Eligible" },
-    { id: "#123B", site: "Site A", date: "00/00/0000", status: "Ineligible" },
-    { id: "#123C", site: "Site A", date: "00/00/0000", status: "Pending" },
-  ]);
+  const { patients: initPatients } = usePatients();
+
+  const viewPatients = initPatients.map((e) => {
+    return {
+      id: e.id,
+      site: e.site || "Site A",
+      date: e.createAt || '',
+      status: e?.eligibility?.status,
+    };
+  });
+
+  const [patients, setPatients] = useState<Patient[]>(viewPatients);
 
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
     useState(false);

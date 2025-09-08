@@ -22,6 +22,7 @@ interface PatientDetailPageProps {
 }
 
 export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
+  console.log("patient: ", patient);
   const [isOpen, setIsOpen] = useState(false);
 
   const items = [
@@ -236,15 +237,8 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
                   </button>
                 </div>
               </div>
-              <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
-                {`{
-  "patient_id": "${patient.id}",
-  "eligibility": {
-    "status": "${patient.eligibility.status}",
-    "date_screened": "${patient.eligibility.dateScreened}",
-    "reason": "${patient.eligibility.reason}"
-  }
-}`}
+              <pre className="text-xs font-mono text-gray-700 overflow-x-auto max-h-50">
+                {JSON.stringify(patient, null, 2)}
               </pre>
               {isOpen && (
                 <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
