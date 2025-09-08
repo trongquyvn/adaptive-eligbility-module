@@ -1,5 +1,5 @@
 import React from "react";
-import { NodeProps, Handle, Position } from "react-flow-renderer";
+import { NodeProps, Handle, Position } from "reactflow";
 
 const handleCss = {
   opacity: 0,

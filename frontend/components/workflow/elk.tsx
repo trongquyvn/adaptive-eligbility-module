@@ -1,6 +1,6 @@
 "use client";
 
-import { Node, Edge } from "react-flow-renderer";
+import { Node, Edge } from "reactflow";
 import ELK from "elkjs/lib/elk.bundled.js";
 
 const elk = new ELK();
@@ -9,8 +9,8 @@ const elkOptions = {
   layoutOptions: {
     "elk.algorithm": "layered",
     "elk.direction": "RIGHT",
-    "elk.spacing.nodeNode": "10",
-    "elk.layered.spacing.nodeNodeBetweenLayers": "10",
+    "elk.spacing.nodeNode": "20",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "20",
     "elk.layered.wrapping.strategy": "MULTI_EDGE",
     "elk.layered.nodePlacement.favorStraightEdges": "true",
   },

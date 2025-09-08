@@ -2,7 +2,7 @@ import { usePatients } from "@/context/PatientContext";
 import PatientWorkflowFlow from "@/components/workflow/PatientWorkflowFlow";
 import TabsMenu from "@/components/common/TabsMenu";
 
-import { Edge, MarkerType, Node } from "react-flow-renderer";
+import { Edge, MarkerType, Node } from "reactflow";
 import getLayoutElements from "@/components/workflow/elk";
 import { useEffect, useState } from "react";
 
@@ -35,6 +35,7 @@ const MyPatientWorkflowFlow = () => {
       return false;
     });
   }
+
   const rawNodes: Node[] = [];
   nodeKeys.forEach((e) => {
     if (isNodeInFlow(e)) {
@@ -81,16 +82,26 @@ const MyPatientWorkflowFlow = () => {
     }
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawEdges: Edge[] = [];
   flow.forEach((e: any, i: number) => {
+    let hasIf: boolean = false;
+    if (e?.on_fail && e?.on_pass) {
+      hasIf = true;
+    }
+
     if (e?.on_fail?.outcome) {
       const edge = {
-        id: "e" + i + "_fail_outcome",
+        id: "e" + i + "_on_fail_outcome",
         source: e.id,
         sourceHandle: "yes",
         target: e.id + "_on_fail",
         markerEnd: { type: MarkerType.Arrow },
+        ...(hasIf
+          ? {
+              type: "custom",
+              label: "No",
+            }
+          : {}),
       };
 
       rawEdges.push(edge);
@@ -100,9 +111,15 @@ const MyPatientWorkflowFlow = () => {
       const edge = {
         id: "e" + i + "_on_fail",
         source: e.id,
-        sourceHandle: "no",
+        sourceHandle: "yes",
         target: e?.on_fail?.next,
         markerEnd: { type: MarkerType.Arrow },
+        ...(hasIf
+          ? {
+              type: "custom",
+              label: "No",
+            }
+          : {}),
       };
 
       rawEdges.push(edge);
@@ -110,11 +127,17 @@ const MyPatientWorkflowFlow = () => {
 
     if (e?.on_pass?.outcome) {
       const edge = {
-        id: "e" + i + "_pass_outcome",
+        id: "e" + i + "_on_pass_outcome",
         source: e.id,
         sourceHandle: "yes",
         target: e.id + "_on_pass",
         markerEnd: { type: MarkerType.Arrow },
+        ...(hasIf
+          ? {
+              type: "custom",
+              label: "Yes",
+            }
+          : {}),
       };
 
       rawEdges.push(edge);
@@ -127,6 +150,12 @@ const MyPatientWorkflowFlow = () => {
         sourceHandle: "yes",
         target: e?.on_pass?.next,
         markerEnd: { type: MarkerType.Arrow },
+        ...(hasIf
+          ? {
+              type: "custom",
+              label: "Yes",
+            }
+          : {}),
       };
 
       rawEdges.push(edge);
