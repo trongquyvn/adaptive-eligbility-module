@@ -3,8 +3,9 @@ const mongoose = require("mongoose");
 const VariableSchema = new mongoose.Schema(
   {
     id: String,
+    name: String,
     type: String,
-    source: String,
+    cate: String,
     path: String,
     unit: String,
     nullable: Boolean,
@@ -56,7 +57,7 @@ const RuleSchema = new mongoose.Schema(
       author: String,
       created_at: Date,
     },
-    variable: VariableSchema,
+    variables: [VariableSchema],
     domain_catalog: [DomainSchema],
     regimen_catalog: [RegimenSchema],
     logic: {

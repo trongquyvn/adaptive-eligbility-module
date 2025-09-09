@@ -7,7 +7,6 @@ import { usePatients } from "@/context/PatientContext";
 export default function DiagramPage() {
   const { rule } = usePatients();
   const chart = ruleToMermaid(rule as any);
-  console.log('chart: ', chart);
 
   return (
     <div style={{ padding: 20 }}>

@@ -3,12 +3,22 @@
 import { useState, useEffect } from "react";
 // import { useSearchParams, useRouter } from "next/navigation";
 
-export default function EligibilityTabs({ tabs = [] }: { tabs: any[] }) {
+export default function EligibilityTabs({
+  tabs = [],
+  callBack,
+}: {
+  tabs: any[];
+  callBack?: (e: string) => void;
+}) {
   // const searchParams = useSearchParams();
   // const router = useRouter();
 
   const defaultTab = tabs[0]?.id;
   const [activeTab, setActiveTab] = useState(defaultTab);
+
+  useEffect(() => {
+    callBack?.(activeTab);
+  }, [callBack, activeTab]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);

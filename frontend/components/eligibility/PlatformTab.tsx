@@ -1,11 +1,15 @@
-export default function PlatformTab() {
+"use client";
+import VariableTable from "@/components/variable/VariableTable";
+import { usePatients } from "@/context/PatientContext";
+
+export default function Index() {
+  const { rule } = usePatients();
+  const variables = rule?.variables || []
+
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-2">Platform</h2>
-      <p className="text-gray-600 text-sm">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore
-      </p>
+      <h2 className="text-lg font-semibold mb-2">Variables</h2>
+      <VariableTable variables={variables} cate="2" />
     </div>
   );
 }

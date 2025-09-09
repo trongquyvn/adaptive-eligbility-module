@@ -12,6 +12,116 @@
     "author": "Empiric",
     "created_at": "2025-06-26T00:00:00Z"
   },
+  "variables": [
+    {
+      "id": "eCRF",
+      "name": "patient_check_eCRF",
+      "type": "BOOLEAN",
+      "cate": "1"
+    },
+    {
+      "id": "database",
+      "name": "database_checking",
+      "type": "DATABASE",
+      "cate": "1"
+    },
+    {
+      "id": "new",
+      "name": "different_patient",
+      "type": "BOOLEAN",
+      "cate": "1"
+    },
+    {
+      "id": "support.started_time",
+      "name": "randomised_since",
+      "type": "TIME_WINDOW",
+      "cate": "2"
+    },
+    {
+      "id": "cap.fever",
+      "name": "feat_fever",
+      "type": "BOOLEAN",
+      "cate": "2"
+    },
+    {
+      "id": "cap.cough",
+      "name": "feat_cough",
+      "type": "BOOLEAN",
+      "cate": "2"
+    },
+    {
+      "id": "cap.dyspnoea",
+      "name": "feat_dyspnoea",
+      "type": "BOOLEAN",
+      "cate": "2"
+    },
+    {
+      "id": "pregnancy.status",
+      "name": "pregnancy_ok",
+      "type": "NOT",
+      "cate": "2"
+    },
+    {
+      "id": "cap.assessment",
+      "name": "REMAP_CAP_Platform_eligible",
+      "type": "BOOLEAN",
+      "cate": "2"
+    },
+    {
+      "id": "cap.registry",
+      "name": "participating_registry_domain",
+      "type": "BOOLEAN",
+      "cate": "3"
+    },
+    {
+      "id": "antibiotics_1",
+      "name": "antibiotics_1",
+      "type": "COMPARE",
+      "cate": "3"
+    },
+    {
+      "id": "antibiotics_2",
+      "name": "antibiotics_2",
+      "type": "COMPARE",
+      "cate": "3"
+    },
+    {
+      "id": "steroids_1",
+      "name": "steroids_1",
+      "type": "COMPARE",
+      "cate": "3"
+    },
+    {
+      "id": "steroids_2",
+      "name": "steroids_2",
+      "type": "COMPARE",
+      "cate": "3"
+    },
+    {
+      "id": "beta_lactam_allergy",
+      "name": "regimen_matrix",
+      "type": "BOOLEAN",
+      "cate": "4"
+    },
+    {
+      "id": "phys",
+      "name": "shock_or_severe",
+      "type": "COMPARE",
+      "cate": "3"
+    },
+    {
+      "id": "consent.required",
+      "name": "consent",
+      "type": "BOOLEAN",
+      "cate": "5"
+    },
+    {
+      "id": "consent.required",
+      "name": "screened_patient",
+      "type": "BOOLEAN",
+      "cate": "6"
+    }
+  ],
   "domain_catalog": [
     { "id": "antibiotics", "active": true },
     { "id": "steroids", "active": true },

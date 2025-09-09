@@ -3,7 +3,7 @@ import PatientWorkflowFlow from "@/components/workflow/PatientWorkflowFlow";
 import TabsMenu from "@/components/common/TabsMenu";
 
 import { Edge, MarkerType, Node } from "reactflow";
-import getLayoutElements from "@/components/workflow/elk";
+import getLayoutElements from "@/lib/elk";
 import { useEffect, useState } from "react";
 
 const renderOutcome = (data: any) => {
