@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthProvider";
 import { PatientProvider } from "@/context/PatientContext";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
-import { API_BASE_URL } from "@/contanst";
+import { API_BASE_URL } from "@/constants";
 import rule from "@/mockData/rule1.json";
 
 const geistSans = Geist({

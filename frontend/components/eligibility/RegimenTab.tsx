@@ -1,15 +1,24 @@
 "use client";
-import VariableTable from "@/components/variable/VariableTable";
 import { usePatients } from "@/context/PatientContext";
+import RegimenTable from "@/components/variable/RegimenTable";
+import NodesTable from "@/components/variable/NodesTable";
 
 export default function Index() {
   const { rule } = usePatients();
-  const variables = rule?.variables || []
+  const regimens = rule?.regimen_catalog || [];
+  const nodes = rule?.logic?.nodes || [];
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-2">Variables</h2>
-      <VariableTable variables={variables} cate="4" />
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Regimens</h2>
+        <RegimenTable regimens={regimens} />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-2">Nodes</h2>
+        <NodesTable nodes={nodes} cate="4" />
+      </div>
     </div>
   );
 }

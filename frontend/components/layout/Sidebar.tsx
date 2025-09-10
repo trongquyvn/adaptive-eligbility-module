@@ -6,7 +6,7 @@ import { Home, ClipboardList, Users, Target } from "lucide-react";
 import Link from "next/link";
 
 const menu = [
-  { label: "Home", icon: Home, href: "/patient" },
+  { label: "Patient", icon: Home, href: "/patient" },
   { label: "Roadmap", icon: ClipboardList, href: "/roadmap" },
   { label: "Mermaid", icon: ClipboardList, href: "/roadmap-2" },
   // { label: "Population", icon: Users, href: "/population" },

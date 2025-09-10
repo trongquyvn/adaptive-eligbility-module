@@ -5,6 +5,7 @@ import TabsMenu from "@/components/common/TabsMenu";
 import { Edge, MarkerType, Node } from "reactflow";
 import getLayoutElements from "@/lib/elk";
 import { useEffect, useState } from "react";
+import { exportJsonToFile } from "@/lib/common";
 
 const renderOutcome = (data: any) => {
   return (
@@ -279,6 +280,8 @@ const JSONFile = () => {
 };
 
 export default function OverviewTab() {
+  const { rule } = usePatients();
+
   return (
     <div className="bg-white p-5">
       <div className="flex justify-between mb-5">
@@ -290,7 +293,14 @@ export default function OverviewTab() {
           </p>
         </div>
         <div>
-          <button className="px-4 py-2 rounded-lg border">Export</button>
+          <button
+            className="px-4 py-2 rounded-lg border"
+            onClick={() => {
+              exportJsonToFile(rule, "diagram.json");
+            }}
+          >
+            Export
+          </button>
         </div>
       </div>
 

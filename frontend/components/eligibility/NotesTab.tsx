@@ -9,7 +9,7 @@ export default function Index() {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-2">Nodes</h2>
-      <NodesTable nodes={nodes} cate="1"/>
+      <NodesTable nodes={nodes} />
     </div>
   );
 }

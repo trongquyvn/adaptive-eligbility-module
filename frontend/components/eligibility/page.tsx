@@ -8,9 +8,6 @@ import PlatformTab from "@/components/eligibility/PlatformTab";
 import DomainTab from "@/components/eligibility/DomainTab";
 import RegimenTab from "@/components/eligibility/RegimenTab";
 import ConsentTab from "@/components/eligibility/ConsentTab";
-import VariablesTab from "@/components/eligibility/VariablesTab";
-import NodesTab from "@/components/eligibility/NotesTab";
-
 import VariableCreator from "@/components/variable/VariableCreator";
 import DomainCreator from "@/components/variable/DomainCreator";
 import RegimenCreator from "@/components/variable/RegimenCreator";
@@ -25,8 +22,6 @@ const tabs = [
   { id: "domain", label: "Domain", component: DomainTab },
   { id: "regimen", label: "Regimen", component: RegimenTab },
   { id: "consent", label: "Consent", component: ConsentTab },
-  { id: "variables", label: "Variables", component: VariablesTab },
-  { id: "node", label: "Nodes", component: NodesTab },
 ];
 
 export default function RoadmapPage() {
@@ -48,15 +43,11 @@ export default function RoadmapPage() {
           </button>
         )}
 
-        {(activeTab === "id-check" ||
-          activeTab === "platform" ||
-          activeTab === "consent") && (
-          <div style={{ height: "40px" }}>&nbsp;</div>
+        {activeTab === "domain" && (
+          <DomainCreator />
         )}
 
-        {activeTab === "domain" && <DomainCreator />}
-        {activeTab === "variables" && <VariableCreator />}
-        {activeTab === "regimen" && <RegimenCreator domains={domains} />}
+        {activeTab === "regimen" && <RegimenCreator domains={domains}/>}
       </div>
 
       <TabsMenu tabs={tabs} callBack={setActiveTab} />

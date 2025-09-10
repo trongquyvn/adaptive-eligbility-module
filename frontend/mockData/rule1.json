@@ -16,110 +16,92 @@
     {
       "id": "eCRF",
       "name": "patient_check_eCRF",
-      "type": "BOOLEAN",
-      "cate": "1"
+      "type": "BOOLEAN"
     },
     {
       "id": "database",
       "name": "database_checking",
-      "type": "DATABASE",
-      "cate": "1"
+      "type": "DATABASE"
     },
     {
       "id": "new",
       "name": "different_patient",
-      "type": "BOOLEAN",
-      "cate": "1"
+      "type": "BOOLEAN"
     },
     {
       "id": "support.started_time",
       "name": "randomised_since",
-      "type": "TIME_WINDOW",
-      "cate": "2"
+      "type": "TIME"
     },
     {
       "id": "cap.fever",
       "name": "feat_fever",
-      "type": "BOOLEAN",
-      "cate": "2"
+      "type": "BOOLEAN"
     },
     {
       "id": "cap.cough",
       "name": "feat_cough",
-      "type": "BOOLEAN",
-      "cate": "2"
+      "type": "BOOLEAN"
     },
     {
       "id": "cap.dyspnoea",
       "name": "feat_dyspnoea",
-      "type": "BOOLEAN",
-      "cate": "2"
+      "type": "BOOLEAN"
     },
     {
       "id": "pregnancy.status",
       "name": "pregnancy_ok",
-      "type": "NOT",
-      "cate": "2"
+      "type": "BOOLEAN"
     },
     {
       "id": "cap.assessment",
       "name": "REMAP_CAP_Platform_eligible",
-      "type": "BOOLEAN",
-      "cate": "2"
+      "type": "BOOLEAN"
     },
     {
       "id": "cap.registry",
       "name": "participating_registry_domain",
-      "type": "BOOLEAN",
-      "cate": "3"
+      "type": "BOOLEAN"
     },
     {
       "id": "antibiotics_1",
       "name": "antibiotics_1",
-      "type": "COMPARE",
-      "cate": "3"
+      "type": "COMPARE"
     },
     {
       "id": "antibiotics_2",
       "name": "antibiotics_2",
-      "type": "COMPARE",
-      "cate": "3"
+      "type": "COMPARE"
     },
     {
       "id": "steroids_1",
       "name": "steroids_1",
-      "type": "COMPARE",
-      "cate": "3"
+      "type": "COMPARE"
     },
     {
       "id": "steroids_2",
       "name": "steroids_2",
-      "type": "COMPARE",
-      "cate": "3"
+      "type": "COMPARE"
     },
     {
       "id": "beta_lactam_allergy",
       "name": "regimen_matrix",
-      "type": "BOOLEAN",
-      "cate": "4"
+      "type": "BOOLEAN"
     },
     {
       "id": "phys",
       "name": "shock_or_severe",
-      "type": "COMPARE",
-      "cate": "3"
+      "type": "COMPARE"
     },
     {
       "id": "consent.required",
       "name": "consent",
-      "type": "BOOLEAN",
-      "cate": "5"
+      "type": "BOOLEAN"
     },
     {
-      "id": "consent.required",
+      "id": "screened_patient",
       "name": "screened_patient",
-      "type": "BOOLEAN",
-      "cate": "6"
+      "type": "BOOLEAN"
     }
   ],
   "domain_catalog": [
@@ -177,21 +159,25 @@
       },
       "feat_fever": {
         "name": "CAP fever",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.fever" }
       },
       "feat_cough": {
         "name": "CAP cough",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.cough" }
       },
       "feat_dyspnoea": {
         "name": "CAP dyspnoea",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.dyspnoea" }
       },
       "pregnancy_ok": {
         "name": "Pregnancy",
+        "cate": "2",
         "type": "NOT",
         "input": { "var": "pregnancy.status" },
         "reason_on_fail": "Pregnancy excludes from ABX domain"
@@ -233,6 +219,7 @@
       },
       "antibiotics_1": {
         "name": "Antibiotics 1",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "antibiotics_1" },
@@ -240,6 +227,7 @@
       },
       "antibiotics_2": {
         "name": "Antibiotics 2",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "antibiotics_2" },
@@ -247,6 +235,7 @@
       },
       "steroids_1": {
         "name": "Steroids 1",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "steroids_1" },
@@ -254,6 +243,7 @@
       },
       "steroids_2": {
         "name": "Steroids 2",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "steroids_2" },
@@ -281,6 +271,7 @@
       },
       "shock_or_severe": {
         "name": "Shock or Severe",
+        "cate": "3",
         "type": "COMPARE",
         "operator": "<=",
         "input": { "var": "phys" },
@@ -296,9 +287,32 @@
       "screened_patient": {
         "name": "Master List of screened patient's",
         "type": "BOOLEAN",
-        "cate": "6",
-        "input": { "var": "consent.required" },
+        "cate": "5",
+        "input": { "var": "screened_patient" },
         "reason_on_fail": "screened patient"
+      },
+      "consent_gate": {
+        "name": "Consent gate",
+        "cate": "5",
+        "type": "IF",
+        "cond": {
+          "type": "BOOLEAN",
+          "input": { "var": "consent.required" }
+        },
+        "then": {
+          "type": "COMPARE",
+          "operator": "==",
+          "left": { "var": "consent.status" },
+          "right": { "const": 1 },
+          "reason_on_fail": "Consent not obtained"
+        },
+        "else": {
+          "type": "COMPARE",
+          "operator": "<",
+          "left": { "var": "consent.status" },
+          "right": { "const": 1 },
+          "reason_on_fail": "Consent not obtained"
+        }
       }
     },
     "flow": [

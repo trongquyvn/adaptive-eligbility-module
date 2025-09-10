@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { cateList } from "@/contanst";
+import TagInput from "@/components/common/TagInput";
 
 type Variable = {
   id: string;
   name: string;
   type: string;
-  cate: string;
+  list?: { id: string; name: string }[];
+  multiple?: boolean;
 };
 
 export default function VariableCreator() {
@@ -15,26 +16,42 @@ export default function VariableCreator() {
   const [variables, setVariables] = useState<Variable[]>([]);
 
   const [form, setForm] = useState({
-    cate: cateList[0].id,
     name: "",
     type: "BOOLEAN",
   });
 
-  const generatedId = form.name.trim().toLowerCase().replace(/\s+/g, "_");
+  const [listValues, setListValues] = useState<string[]>([]);
+  const [multiple, setMultiple] = useState(false);
+
+  const generatedId = form.name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name) return;
+    if (!form.name.trim()) return;
 
     const newVar: Variable = {
       id: generatedId,
-      name: form.name,
+      name: form.name.trim(),
       type: form.type,
-      cate: form.cate,
     };
 
+    if (form.type === "LIST") {
+      newVar.list = listValues.map((val, idx) => ({
+        id: String(idx + 1),
+        name: val,
+      }));
+      newVar.multiple = multiple;
+    }
+
     setVariables((prev) => [...prev, newVar]);
-    setForm({ cate: cateList[0].id, name: "", type: "BOOLEAN" });
+
+    // reset
+    setForm({ name: "", type: "BOOLEAN" });
+    setListValues([]);
+    setMultiple(false);
     setShowModal(false);
   };
 
@@ -44,22 +61,34 @@ export default function VariableCreator() {
         onClick={() => setShowModal(true)}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
       >
-        + Add Variables
+        + Add Variable
       </button>
 
-      {/* List hiện tại */}
+      {/* List hiển thị */}
       <div className="space-y-2">
         {variables.map((v, i) => (
           <div
             key={i}
-            className="p-2 border rounded-lg flex justify-between items-center"
+            className="p-2 border rounded-lg flex flex-col gap-1 bg-gray-50"
           >
-            <div>
-              <div className="font-medium">{v.name}</div>
-              <div className="text-xs text-gray-500">
-                id: {v.id} • type: {v.type} • cate: {v.cate}
-              </div>
+            <div className="font-medium">{v.name}</div>
+            <div className="text-xs text-gray-500">
+              id: {v.id} • type: {v.type}
+              {v.type === "LIST" && v.multiple && " • multiple: true"}
             </div>
+            {v.type === "LIST" && v.list && (
+              <div className="text-xs text-gray-700">
+                List:{" "}
+                {v.list.map((item) => (
+                  <span
+                    key={item.id}
+                    className="inline-block px-2 py-0.5 mr-1 rounded-full bg-purple-100 text-purple-700"
+                  >
+                    {item.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -70,7 +99,6 @@ export default function VariableCreator() {
           <div className="bg-white rounded-xl shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4">Create Variable</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium">Name</label>
@@ -103,11 +131,34 @@ export default function VariableCreator() {
                   className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
                 >
                   <option value="BOOLEAN">BOOLEAN</option>
-                  <option value="TIME_WINDOW">TIME_WINDOW</option>
+                  <option value="TIME">TIME</option>
                   <option value="NUMBER">NUMBER</option>
                   <option value="DATA">DATA</option>
+                  <option value="LIST">LIST</option>
                 </select>
               </div>
+
+              {/* List Input nếu chọn LIST */}
+              {form.type === "LIST" && (
+                <div className="space-y-3">
+                  <TagInput
+                    label="List Items"
+                    value={listValues}
+                    onChange={setListValues}
+                    placeholder="Nhập item và Enter"
+                    color="purple"
+                  />
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={multiple}
+                      onChange={(e) => setMultiple(e.target.checked)}
+                      className="rounded border-gray-300"
+                    />
+                    Allow Multiple Selection
+                  </label>
+                </div>
+              )}
 
               {/* Buttons */}
               <div className="flex justify-end space-x-2 pt-4">

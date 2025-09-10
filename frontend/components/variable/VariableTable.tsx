@@ -15,7 +15,8 @@ interface VariableTableProps {
 }
 
 export default function VariableTable({ variables, cate }: VariableTableProps) {
-  const filtered = variables.filter((v) => v.cate === cate);
+  // const filtered = variables.filter((v) => v.cate === cate);
+  const filtered = variables;
 
   if (filtered.length === 0) {
     return (
@@ -30,7 +31,7 @@ export default function VariableTable({ variables, cate }: VariableTableProps) {
       <table className="w-full text-left border-t">
         <thead>
           <tr className="text-gray-500">
-            <th className="py-3">ID</th>
+            {/* <th className="py-3">ID</th> */}
             <th className="py-3">Name</th>
             <th className="py-3">Type</th>
           </tr>
@@ -41,9 +42,9 @@ export default function VariableTable({ variables, cate }: VariableTableProps) {
               key={v.id + v.name}
               className="border-t"
             >
-              <td className="py-3 font-mono text-xs text-gray-800">
+              {/* <td className="py-3 font-mono text-xs text-gray-800">
                 {v.id}
-              </td>
+              </td> */}
               <td className="py-3">{v.name}</td>
               <td className="py-3">{v.type}</td>
             </tr>

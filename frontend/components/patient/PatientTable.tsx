@@ -42,7 +42,7 @@ export default function PatientTable({ patients }: PatientTableProps) {
         <thead>
           <tr className="text-gray-500">
             <th className="py-3">Patient ID</th>
-            <th className="py-3">Site</th>
+            {/* <th className="py-3">Site</th> */}
             <th className="py-3">Date Screened</th>
             <th className="py-3">Eligibility Status</th>
             <th className="py-3">Actions</th>
@@ -52,11 +52,11 @@ export default function PatientTable({ patients }: PatientTableProps) {
           {patients.map((p, i) => (
             <tr key={i} className="border-t">
               <td className="py-3">{p.id}</td>
-              <td className="py-3">
+              {/* <td className="py-3">
                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700">
                   {p.site}
                 </span>
-              </td>
+              </td> */}
               <td className="py-3">{p.date}</td>
               <td className="py-3">
                 <span
