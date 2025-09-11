@@ -5,7 +5,8 @@ import { AuthProvider } from "@/context/AuthProvider";
 import { PatientProvider } from "@/context/PatientContext";
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { API_BASE_URL } from "@/constants";
-import rule from "@/mockData/rule1.json";
+import { ToastProvider } from "@/context/ToastContext";
+// import rule from "@/mockData/rule1.json";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,16 +23,13 @@ export const metadata: Metadata = {
   description: "Adaptive Eligibility Module",
 };
 
-async function getRule(id: string = "remap-cap") {
-  const res = await fetch(
-    `${API_BASE_URL}/api/roadmap/${encodeURIComponent(id)}`,
-    {
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+async function getRules() {
+  const res = await fetch(`${API_BASE_URL}/api/roadmap/`, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!res.ok) throw new Error("Failed to fetch patients");
   return res.json();
@@ -54,7 +52,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [patients] = await Promise.all([getPatients(), getRule()]);
+  const [patients, rules] = await Promise.all([getPatients(), getRules()]);
 
   return (
     <html lang="en">
@@ -63,11 +61,11 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <ConditionalLayout>
-            <PatientProvider patients={patients} rule={rule}>
-              {children}
-            </PatientProvider>
-          </ConditionalLayout>
+          <PatientProvider patients={patients} rules={rules}>
+            <ToastProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </ToastProvider>
+          </PatientProvider>
         </AuthProvider>
       </body>
     </html>

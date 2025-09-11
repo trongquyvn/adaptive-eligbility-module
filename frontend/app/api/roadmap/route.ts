@@ -1,16 +1,31 @@
 import { API_CALL_URL } from "@/constants";
 import { NextResponse } from "next/server";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET() {
+  // request: Request,
+  // { params }: { params: Promise<{ id: string }> }
+  const api = `${API_CALL_URL}/rules`;
+  const res = await fetch(api, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    return NextResponse.json({ error: "Rule not found" }, { status: 404 });
+  }
+
+  const data = await res.json();
+  return NextResponse.json(data);
+}
+
+export async function POST(req: Request) {
   try {
-    const { id } = await params;
     const body = await req.json();
-    const api = `${API_CALL_URL}/rules/${id}`;
+    const api = `${API_CALL_URL}/rules`;
     const res = await fetch(api, {
-      method: "PUT",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -28,9 +43,8 @@ export async function PUT(
     const data = await res.json();
     return NextResponse.json(data);
   } catch (err: any) {
-    console.error("PUT /rules error:", err);
     return NextResponse.json(
-      { error: "Failed to update rule", details: err.message },
+      { error: "Unexpected error", details: err.message },
       { status: 500 }
     );
   }

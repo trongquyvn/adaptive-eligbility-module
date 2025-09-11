@@ -31,7 +31,7 @@ export default function DomainTable({ domains }: DomainTableProps) {
         </thead>
         <tbody>
           {domains.map((d) => (
-            <tr key={d.id} className="border-t">
+            <tr key={d.id + Math.random()} className="border-t">
               <td className="py-3">{d.id}</td>
               <td className="py-3">{d.active ? "true" : "false"}</td>
             </tr>

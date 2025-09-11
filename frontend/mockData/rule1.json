@@ -107,7 +107,7 @@
   "domain_catalog": [
     { "id": "antibiotics", "active": true },
     { "id": "steroids", "active": true },
-    { "id": "anticoag", "active": false }
+    { "id": "anticoag", "active": true }
   ],
   "regimen_catalog": [
     { "id": "abx_a", "domain_id": "antibiotics", "label": "ABX Regimen A" },

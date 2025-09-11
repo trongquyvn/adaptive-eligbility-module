@@ -2,33 +2,33 @@
 
 import React, { useState } from "react";
 import TagInput from "@/components/common/TagInput";
+import { usePatients } from "@/context/PatientContext";
+import { useToast } from "@/context/ToastContext";
+import { updateRule } from "@/lib/rule";
 
 type Variable = {
   id: string;
   name: string;
   type: string;
-  list?: { id: string; name: string }[];
+  codes?: string[];
   multiple?: boolean;
 };
 
 export default function VariableCreator() {
   const [showModal, setShowModal] = useState(false);
-  const [variables, setVariables] = useState<Variable[]>([]);
-
   const [form, setForm] = useState({
     name: "",
     type: "BOOLEAN",
   });
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
 
   const [listValues, setListValues] = useState<string[]>([]);
   const [multiple, setMultiple] = useState(false);
 
-  const generatedId = form.name
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_");
+  const generatedId = form.name.trim().toLowerCase().replace(/\s+/g, "_");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
 
@@ -38,16 +38,26 @@ export default function VariableCreator() {
       type: form.type,
     };
 
-    if (form.type === "LIST") {
-      newVar.list = listValues.map((val, idx) => ({
-        id: String(idx + 1),
-        name: val,
-      }));
+    if (form.type === "CODES") {
+      newVar.codes = listValues;
       newVar.multiple = multiple;
     }
 
-    setVariables((prev) => [...prev, newVar]);
+    const check = rule.variables.find((e: any) => e.id === newVar.id);
+    if (check) {
+      showToast("Variable already exists!", "info");
+    } else {
+      const newRule = {
+        ...rule,
+        variables: [...rule.variables, newVar],
+      };
 
+      const result = await updateRule(rule._id, newRule);
+      if (result) {
+        updateActiveRule(result);
+        showToast("Add Variable!", "success");
+      }
+    }
     // reset
     setForm({ name: "", type: "BOOLEAN" });
     setListValues([]);
@@ -63,35 +73,6 @@ export default function VariableCreator() {
       >
         + Add Variable
       </button>
-
-      {/* List hiển thị */}
-      <div className="space-y-2">
-        {variables.map((v, i) => (
-          <div
-            key={i}
-            className="p-2 border rounded-lg flex flex-col gap-1 bg-gray-50"
-          >
-            <div className="font-medium">{v.name}</div>
-            <div className="text-xs text-gray-500">
-              id: {v.id} • type: {v.type}
-              {v.type === "LIST" && v.multiple && " • multiple: true"}
-            </div>
-            {v.type === "LIST" && v.list && (
-              <div className="text-xs text-gray-700">
-                List:{" "}
-                {v.list.map((item) => (
-                  <span
-                    key={item.id}
-                    className="inline-block px-2 py-0.5 mr-1 rounded-full bg-purple-100 text-purple-700"
-                  >
-                    {item.name}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
 
       {/* Modal */}
       {showModal && (
@@ -134,18 +115,17 @@ export default function VariableCreator() {
                   <option value="TIME">TIME</option>
                   <option value="NUMBER">NUMBER</option>
                   <option value="DATA">DATA</option>
-                  <option value="LIST">LIST</option>
+                  <option value="CODES">CODES</option>
                 </select>
               </div>
 
-              {/* List Input nếu chọn LIST */}
-              {form.type === "LIST" && (
+              {form.type === "CODES" && (
                 <div className="space-y-3">
                   <TagInput
                     label="List Items"
                     value={listValues}
                     onChange={setListValues}
-                    placeholder="Nhập item và Enter"
+                    placeholder="Fill and Enter"
                     color="purple"
                   />
                   <label className="flex items-center gap-2 text-sm">

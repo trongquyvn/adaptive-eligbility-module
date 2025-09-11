@@ -1,5 +1,8 @@
 "use client";
 
+import { usePatients } from "@/context/PatientContext";
+import { useToast } from "@/context/ToastContext";
+import { updateRule } from "@/lib/rule";
 import React, { useState } from "react";
 
 type Regimen = {
@@ -13,15 +16,16 @@ type RegimenCreatorProps = {
 };
 
 export default function RegimenCreator({ domains }: RegimenCreatorProps) {
-  const [regimens, setRegimens] = useState<Regimen[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<Regimen>({
     id: "",
     domain_id: "",
     label: "",
   });
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.id.trim() || !form.domain_id.trim() || !form.label.trim()) return;
 
@@ -31,7 +35,22 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
       label: form.label.trim(),
     };
 
-    setRegimens((prev) => [...prev, newReg]);
+    const check = rule.regimen_catalog.find((e: any) => e.id === newReg.id);
+    if (check) {
+      showToast("Regimen already exists!", "info");
+    } else {
+      const newRule = {
+        ...rule,
+        regimen_catalog: [...rule.regimen_catalog, newReg],
+      };
+
+      const result = await updateRule(rule._id, newRule);
+      if (result) {
+        updateActiveRule(result);
+        showToast("Add Regimen!", "success");
+      }
+    }
+
     setForm({ id: "", domain_id: "", label: "" });
     setShowModal(false);
   };
@@ -44,18 +63,6 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
       >
         + Add Regimen
       </button>
-
-      {/* List */}
-      <div className="space-y-2">
-        {regimens.map((r, i) => (
-          <div key={i} className="p-2 border rounded-lg bg-gray-50">
-            <div className="font-medium">{r.label}</div>
-            <div className="text-xs text-gray-500">
-              id: {r.id} • domain: {r.domain_id}
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Modal */}
       {showModal && (
