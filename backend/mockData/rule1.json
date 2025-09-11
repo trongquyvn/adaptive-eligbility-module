@@ -12,6 +12,98 @@
     "author": "Empiric",
     "created_at": "2025-06-26T00:00:00Z"
   },
+  "variables": [
+    {
+      "id": "eCRF",
+      "name": "patient_check_eCRF",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "database",
+      "name": "database_checking",
+      "type": "DATABASE"
+    },
+    {
+      "id": "new",
+      "name": "different_patient",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "support.started_time",
+      "name": "randomised_since",
+      "type": "TIME"
+    },
+    {
+      "id": "cap.fever",
+      "name": "feat_fever",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "cap.cough",
+      "name": "feat_cough",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "cap.dyspnoea",
+      "name": "feat_dyspnoea",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "pregnancy.status",
+      "name": "pregnancy_ok",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "cap.assessment",
+      "name": "REMAP_CAP_Platform_eligible",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "cap.registry",
+      "name": "participating_registry_domain",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "antibiotics_1",
+      "name": "antibiotics_1",
+      "type": "COMPARE"
+    },
+    {
+      "id": "antibiotics_2",
+      "name": "antibiotics_2",
+      "type": "COMPARE"
+    },
+    {
+      "id": "steroids_1",
+      "name": "steroids_1",
+      "type": "COMPARE"
+    },
+    {
+      "id": "steroids_2",
+      "name": "steroids_2",
+      "type": "COMPARE"
+    },
+    {
+      "id": "beta_lactam_allergy",
+      "name": "regimen_matrix",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "phys",
+      "name": "shock_or_severe",
+      "type": "COMPARE"
+    },
+    {
+      "id": "consent.required",
+      "name": "consent",
+      "type": "BOOLEAN"
+    },
+    {
+      "id": "screened_patient",
+      "name": "screened_patient",
+      "type": "BOOLEAN"
+    }
+  ],
   "domain_catalog": [
     { "id": "antibiotics", "active": true },
     { "id": "steroids", "active": true },
@@ -31,24 +123,28 @@
     "nodes": {
       "patient_check_eCRF": {
         "name": "Patient demographic checks",
+        "cate": "1",
         "type": "BOOLEAN",
         "input": { "var": "eCRF" },
         "reason_on_fail": "Patient has not entered eCRF"
       },
       "database_checking": {
         "name": "Are they already in the database",
+        "cate": "1",
         "type": "DATABASE",
         "input": { "var": "database" },
         "reason_on_fail": "Patient has not in database"
       },
       "different_patient": {
         "name": "It is a different patient",
+        "cate": "1",
         "type": "BOOLEAN",
         "input": { "var": "new" },
         "reason_on_fail": "different_patient"
       },
       "randomised_since": {
         "name": "Has it been more than 90 days since they were randomised",
+        "cate": "2",
         "type": "TIME_WINDOW",
         "input": { "var": "support.started_time" },
         "window": { "max_hours_since": 90 },
@@ -56,33 +152,39 @@
       },
       "CAP_assessment": {
         "name": "CAP clinical feature",
+        "cate": "2",
         "type": "ANY",
         "children": ["feat_fever", "feat_cough", "feat_dyspnoea"],
         "reason_on_fail": "CAP_assessment"
       },
       "feat_fever": {
         "name": "CAP fever",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.fever" }
       },
       "feat_cough": {
         "name": "CAP cough",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.cough" }
       },
       "feat_dyspnoea": {
         "name": "CAP dyspnoea",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.dyspnoea" }
       },
       "pregnancy_ok": {
         "name": "Pregnancy",
+        "cate": "2",
         "type": "NOT",
         "input": { "var": "pregnancy.status" },
         "reason_on_fail": "Pregnancy excludes from ABX domain"
       },
       "REMAP_CAP_Platform_eligible": {
         "name": "REMAP-CAP Platform eligible",
+        "cate": "2",
         "type": "BOOLEAN",
         "input": { "var": "cap.assessment" },
         "reason_on_fail": "REMAP_CAP_Platform_eligible"
@@ -94,28 +196,38 @@
         "input": { "var": "cap.registry" },
         "reason_on_fail": "participating_registry_domain"
       },
+      "antibiotics_1_2": {
+        "name": "Antibiotics 1 or 2",
+        "cate": "3",
+        "type": "ANY",
+        "children": ["antibiotics_1", "antibiotics_2"],
+        "reason_on_fail": "Antibiotics 1 or 2 error"
+      },
+      "steroids_1_2": {
+        "name": "Steroids 1 or 2",
+        "cate": "3",
+        "type": "ANY",
+        "children": ["steroids_1", "steroids_2"],
+        "reason_on_fail": "Steroids 1 or 2 error"
+      },
       "domain_eligibility": {
         "name": "Domain level eligibility assessment",
-        "type": "MAP",
+        "cate": "4",
+        "type": "DOMAIN_MAP",
         "items": [
           {
             "domain_id": "antibiotics",
-            "rule": {
-              "type": "ANY",
-              "children": ["antibiotics_1", "antibiotics_2"]
-            }
+            "rule": "antibiotics_1_2"
           },
           {
             "domain_id": "steroids",
-            "rule": {
-              "type": "ANY",
-              "children": ["steroids_1", "steroids_2"]
-            }
+            "rule": "steroids_1_2"
           }
         ]
       },
       "antibiotics_1": {
         "name": "Antibiotics 1",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "antibiotics_1" },
@@ -123,6 +235,7 @@
       },
       "antibiotics_2": {
         "name": "Antibiotics 2",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "antibiotics_2" },
@@ -130,6 +243,7 @@
       },
       "steroids_1": {
         "name": "Steroids 1",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "steroids_1" },
@@ -137,10 +251,18 @@
       },
       "steroids_2": {
         "name": "Steroids 2",
+        "cate": "3",
         "type": "COMPARE",
         "operator": ">",
         "input": { "var": "steroids_2" },
         "right": { "const": 20 }
+      },
+      "beta_lactam_allergy_checking": {
+        "name": "beta lactam allergy",
+        "cate": "2",
+        "type": "BOOLEAN",
+        "input": { "var": "beta_lactam_allergy" },
+        "reason_on_fail": "beta_lactam_allergy_checking error"
       },
       "regimen_matrix": {
         "name": "Eligible for 2 or more REGIMEN",
@@ -152,10 +274,7 @@
         "constraints": [
           {
             "regimen_id": "abx_a",
-            "exclude_if": {
-              "type": "BOOLEAN",
-              "input": { "var": "cap.allergy" }
-            },
+            "exclude_if": "beta_lactam_allergy_checking",
             "reason_on_exclude": "Allergy to beta-lactam"
           }
         ],
@@ -164,6 +283,7 @@
       },
       "shock_or_severe": {
         "name": "Shock or Severe",
+        "cate": "3",
         "type": "COMPARE",
         "operator": "<=",
         "input": { "var": "phys" },
@@ -171,6 +291,7 @@
       },
       "consent": {
         "name": "Do we need consent",
+        "cate": "5",
         "type": "BOOLEAN",
         "input": { "var": "consent.required" },
         "reason_on_fail": "consent"
@@ -178,8 +299,17 @@
       "screened_patient": {
         "name": "Master List of screened patient's",
         "type": "BOOLEAN",
-        "input": { "var": "consent.required" },
+        "cate": "5",
+        "input": { "var": "screened_patient" },
         "reason_on_fail": "screened patient"
+      },
+      "consent_gate": {
+        "name": "Consent gate",
+        "cate": "5",
+        "type": "IF",
+        "cond": "patient_check_eCRF",
+        "then": "domain_eligibility",
+        "else": "participating_registry_domain"
       }
     },
     "flow": [
@@ -251,7 +381,7 @@
       {
         "id": "consent",
         "on_fail": { "next": "participating_registry_domain" },
-        "on_pass": { "outcome": "Randomise", "code": "AB1" }
+        "on_pass": { "outcome": "Randomise" }
       }
     ]
   }

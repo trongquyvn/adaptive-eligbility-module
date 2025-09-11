@@ -25,6 +25,9 @@ async function importRule() {
     const rawData = fs.readFileSync(path.resolve(filePath), "utf-8");
     const data = JSON.parse(rawData);
 
+    await Rule.deleteMany({});
+    console.log(`✅ DELETE`);
+
     let result;
     if (Array.isArray(data)) {
       result = await Rule.insertMany(data);

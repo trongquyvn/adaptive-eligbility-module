@@ -3,7 +3,7 @@ const { evaluate } = require("../services/evaluate");
 const EvaluationLog = require("../models/EvaluationLog");
 const Rule = require("../models/Rule");
 const router = express.Router();
-const testRule = require("../data/rule1.json");
+const testRule = require("../mockData/rule1.json");
 
 /**
  * POST /check
