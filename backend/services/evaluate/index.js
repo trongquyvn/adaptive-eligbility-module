@@ -153,16 +153,34 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
   }
 
   if (t === "IF") {
-    const cond = evaluateNode(node.cond, patientData, ruleDoc, ctx);
+    const condNode =
+      typeof node.cond === "string"
+        ? ruleDoc.logic.nodes[node.cond]
+        : node.cond;
+    const thenNode =
+      typeof node.then === "string"
+        ? ruleDoc.logic.nodes[node.then]
+        : node.then;
+    const elseNode =
+      typeof node.else === "string"
+        ? ruleDoc.logic.nodes[node.else]
+        : node.else;
+
+    const cond = evaluateNode(condNode, patientData, ruleDoc, ctx);
     return cond
-      ? evaluateNode(node.then, patientData, ruleDoc, ctx)
-      : evaluateNode(node.else, patientData, ruleDoc, ctx);
+      ? evaluateNode(thenNode, patientData, ruleDoc, ctx)
+      : evaluateNode(elseNode, patientData, ruleDoc, ctx);
   }
 
-  if (t === "MAP") {
+  if (t === "DOMAIN_MAP") {
     if (!ctx.eligible_domains) ctx.eligible_domains = [];
     for (const item of node.items) {
-      const res = evaluateNode(item.rule, patientData, ruleDoc, ctx);
+      const ruleNode =
+        typeof item.rule === "string"
+          ? ruleDoc.logic.nodes[item.rule]
+          : item.rule;
+
+      const res = evaluateNode(ruleNode, patientData, ruleDoc, ctx);
       if (res) {
         ctx.eligible_domains.push(item.domain_id);
       }
@@ -187,12 +205,12 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
         regimens = regimens.filter((reg) => {
           if (reg.id !== constraint.regimen_id) return true;
 
-          const excluded = evaluateNode(
-            constraint.exclude_if,
-            patientData,
-            ruleDoc,
-            ctx
-          );
+          const excludeNode =
+            typeof constraint.exclude_if === "string"
+              ? ruleDoc.logic.nodes[constraint.exclude_if]
+              : constraint.exclude_if;
+
+          const excluded = evaluateNode(excludeNode, patientData, ruleDoc, ctx);
 
           if (excluded) {
             if (constraint.reason_on_exclude) {

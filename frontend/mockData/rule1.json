@@ -196,24 +196,32 @@
         "input": { "var": "cap.registry" },
         "reason_on_fail": "participating_registry_domain"
       },
+      "antibiotics_1_2": {
+        "name": "Antibiotics 1 or 2",
+        "cate": "3",
+        "type": "ANY",
+        "children": ["antibiotics_1", "antibiotics_2"],
+        "reason_on_fail": "Antibiotics 1 or 2 error"
+      },
+      "steroids_1_2": {
+        "name": "Steroids 1 or 2",
+        "cate": "3",
+        "type": "ANY",
+        "children": ["steroids_1", "steroids_2"],
+        "reason_on_fail": "Steroids 1 or 2 error"
+      },
       "domain_eligibility": {
         "name": "Domain level eligibility assessment",
         "cate": "4",
-        "type": "MAP",
+        "type": "DOMAIN_MAP",
         "items": [
           {
             "domain_id": "antibiotics",
-            "rule": {
-              "type": "ANY",
-              "children": ["antibiotics_1", "antibiotics_2"]
-            }
+            "rule": "antibiotics_1_2"
           },
           {
             "domain_id": "steroids",
-            "rule": {
-              "type": "ANY",
-              "children": ["steroids_1", "steroids_2"]
-            }
+            "rule": "steroids_1_2"
           }
         ]
       },
@@ -249,6 +257,13 @@
         "input": { "var": "steroids_2" },
         "right": { "const": 20 }
       },
+      "beta_lactam_allergy_checking": {
+        "name": "beta lactam allergy",
+        "cate": "2",
+        "type": "BOOLEAN",
+        "input": { "var": "beta_lactam_allergy" },
+        "reason_on_fail": "beta_lactam_allergy_checking error"
+      },
       "regimen_matrix": {
         "name": "Eligible for 2 or more REGIMEN",
         "cate": "4",
@@ -259,10 +274,7 @@
         "constraints": [
           {
             "regimen_id": "abx_a",
-            "exclude_if": {
-              "type": "BOOLEAN",
-              "input": { "var": "beta_lactam_allergy" }
-            },
+            "exclude_if": "beta_lactam_allergy_checking",
             "reason_on_exclude": "Allergy to beta-lactam"
           }
         ],
@@ -295,24 +307,9 @@
         "name": "Consent gate",
         "cate": "5",
         "type": "IF",
-        "cond": {
-          "type": "BOOLEAN",
-          "input": { "var": "consent.required" }
-        },
-        "then": {
-          "type": "COMPARE",
-          "operator": "==",
-          "left": { "var": "consent.status" },
-          "right": { "const": 1 },
-          "reason_on_fail": "Consent not obtained"
-        },
-        "else": {
-          "type": "COMPARE",
-          "operator": "<",
-          "left": { "var": "consent.status" },
-          "right": { "const": 1 },
-          "reason_on_fail": "Consent not obtained"
-        }
+        "cond": "patient_check_eCRF",
+        "then": "domain_eligibility",
+        "else": "participating_registry_domain"
       }
     },
     "flow": [

@@ -1,7 +1,7 @@
 "use client";
 
 import { ruleToMermaid } from "@/lib/ruleToMermaid";
-import MermaidChart from "@/components/MermaidChart";
+import MermaidChart from "@/components/workflow/MermaidChart";
 import { usePatients } from "@/context/PatientContext";
 
 export default function DiagramPage() {

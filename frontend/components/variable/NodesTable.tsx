@@ -15,68 +15,50 @@ function renderData(node: any) {
     case "BOOLEAN":
     case "NOT":
     case "DATABASE":
-      return <div>Var = {node?.input?.var}</div>;
+      return <div>Var: {node?.input?.var}</div>;
 
     case "COMPARE":
       return (
         <div>
-          <div>Operator = {node?.operator}</div>
-          <div>Left = {node?.input?.var}</div>
-          <div>Right = {node?.right?.const}</div>
+          <div>Left: {node?.input?.var}</div>
+          <div>Operator: {node?.operator}</div>
+          <div>Right: {node?.right?.const}</div>
         </div>
       );
 
     case "ANY":
     case "ALL":
-      return <div>Children = {node?.children?.join(", ")}</div>;
+      return <div>Children: {node?.children?.join(", ")}</div>;
 
     case "TIME_WINDOW":
       return (
         <div>
-          <div>Var = {node?.input?.var}</div>
-          <div>Max hours = {node?.window?.max_hours_since}</div>
-          <div>Min hours = {node?.window?.min_hours_since}</div>
+          <div>Var: {node?.input?.var}</div>
+          <div>Max hours: {node?.window?.max_hours_since}</div>
+          <div>Min hours: {node?.window?.min_hours_since}</div>
         </div>
       );
 
     case "IF":
       return (
         <div>
-          <div>
-            <div>Condition</div>
-            <pre className="ml-4 mt-1 text-xs bg-gray-50 p-2 rounded">
-              {JSON.stringify(node?.cond, null, 2)}
-            </pre>
-          </div>
-          <div>
-            <div>Then</div>
-            <pre className="ml-4 mt-1 text-xs bg-gray-50 p-2 rounded">
-              {JSON.stringify(node?.then, null, 2)}
-            </pre>
-          </div>
-          <div>
-            <div>Else</div>
-            <pre className="ml-4 mt-1 text-xs bg-gray-50 p-2 rounded">
-              {JSON.stringify(node?.else, null, 2)}
-            </pre>
-          </div>
+          <div>Condition: {node?.cond}</div>
+          <div>Then: {node?.then}</div>
+          <div>Else: {node?.else}</div>
         </div>
       );
 
-    case "MAP":
+    case "DOMAIN_MAP":
       return (
         <div className="space-y-1">
           Items:
           <ul className="list-disc list-inside">
             {node?.items?.map((item: any, idx: number) => (
-              <li key={idx} className="ml-4">
-                <span>Domain = {item?.domain_id}</span>
-                <span>
-                  <pre className="ml-4 mt-1 text-xs bg-gray-50 p-2 rounded">
-                    <div>Rule</div>
-                    {JSON.stringify(item?.rule, null, 2)}
-                  </pre>
-                </span>
+              <li key={idx}>
+                <div className="inline-flex flex-col">
+                  <div className="inline">Domain: {item?.domain_id}</div>
+                  <div className="inline">Rule: {item?.rule}</div>
+                </div>
               </li>
             ))}
           </ul>
@@ -92,14 +74,11 @@ function renderData(node: any) {
             Constraints:
             <ul className="list-disc list-inside space-y-1">
               {node?.constraints?.map((c: any, idx: number) => (
-                <li key={idx} className="ml-4">
-                  <span>Regimen = {c?.regimen_id}</span>
-                  <span>
-                    <pre className="ml-4 mt-1 text-xs bg-gray-50 p-2 rounded">
-                      <div>Exclude If</div>
-                      {JSON.stringify(c?.exclude_if, null, 2)}
-                    </pre>
-                  </span>
+                <li key={idx}>
+                  <div className="inline-flex flex-col">
+                    <div className="inline">Regimen: {c?.regimen_id}</div>
+                    <div className="inline">Exclude If: {c?.exclude_if}</div>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -121,8 +100,9 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
 
   const activeCate = cate ?? selectedCate;
 
-  const filteredNodes = Object.entries(nodes).filter(([_, node]: [string, any]) =>
-    activeCate === "all" ? true : node?.cate === activeCate
+  const filteredNodes = Object.entries(nodes).filter(
+    ([_, node]: [string, any]) =>
+      activeCate === "all" ? true : node?.cate === activeCate
   );
 
   return (
@@ -149,6 +129,7 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
       <table className="w-full text-left border-t">
         <thead>
           <tr className="text-gray-500">
+            <th className="py-3">Id</th>
             <th className="py-3">Name</th>
             <th className="py-3">Type</th>
             <th className="py-3">Cate</th>
@@ -158,6 +139,7 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
         <tbody>
           {filteredNodes.map(([key, node]: [string, any]) => (
             <tr key={key} className="border-t align-top">
+              <td className="py-3 font-semibold">{key}</td>
               <td className="py-3 pr-2 max-w-[200px] truncate">
                 <div className="flex items-center gap-1">
                   <span className="truncate">{node?.name}</span>
