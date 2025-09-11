@@ -9,7 +9,8 @@ const VariableSchema = new mongoose.Schema(
     path: String,
     unit: String,
     nullable: Boolean,
-    codes: mongoose.Schema.Types.Mixed,
+    codes: [String],
+    multiple: Boolean,
   },
   { _id: false }
 );
@@ -44,7 +45,6 @@ const FlowSchema = new mongoose.Schema(
 
 const RuleSchema = new mongoose.Schema(
   {
-    schema_version: { type: String, required: true },
     trial: {
       id: String,
       version: String,
@@ -69,4 +69,5 @@ const RuleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+RuleSchema.index({ "trial.id": 1, "trial.version": 1 }, { unique: true });
 module.exports = mongoose.model("Rule", RuleSchema);

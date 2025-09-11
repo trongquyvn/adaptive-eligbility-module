@@ -25,7 +25,7 @@ async function importRule() {
     const rawData = fs.readFileSync(path.resolve(filePath), "utf-8");
     const data = JSON.parse(rawData);
 
-    await Rule.deleteMany({});
+    await mongoose.connection.collection("rules").drop();
     console.log(`✅ DELETE`);
 
     let result;
