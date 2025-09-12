@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import ReactFlow, {
   Node,
   Controls,
@@ -15,14 +15,17 @@ import {
   LeftEnvelopeNode,
   RightEnvelopeNode,
   DiamondNode,
+  CircleNode,
 } from "./customNode";
 import "reactflow/dist/style.css";
+import NodePopup from "./NodePopup";
 
 const nodeTypes = {
   roundedRectangleNode: RoundedRectangleNode,
   leftEnvelopeNode: LeftEnvelopeNode,
   rightEnvelopeNode: RightEnvelopeNode,
   diamondNode: DiamondNode,
+  circleNode: CircleNode,
 };
 
 function CustomEdge(props: EdgeProps) {
@@ -97,58 +100,36 @@ export default function PatientWorkflowFlow({
   nodes: Node[];
   edges: Edge[];
 }) {
-  // Category info: name + vertical y position
-  // const categories = [
-  //   { id: "cat1", label: "Category 1", y: 50 },
-  //   { id: "cat2", label: "Category 2", y: 150 },
-  //   { id: "cat3", label: "Category 3", y: 250 },
-  //   { id: "cat4", label: "Category 4", y: 350 },
-  // ];
+  const [selectedNodeId, setSelectedNodeId] = useState<string>("");
+  const [open, setOpen] = useState(false);
 
-  // Nodes: x = horizontal position, y = category.y
-  // const nodes: Node[] = [
-  //   {
-  //     id: "A1",
-  //     type: "roundedRectangleNode",
-  //     data: { label: "Patient Registration" },
-  //     position: { x: 150, y: categories[0].y },
-  //   },
-  //   {
-  //     id: "B1",
-  //     type: "leftEnvelopeNode",
-  //     data: { label: "Check if patient exists" },
-  //     position: { x: 300, y: categories[0].y },
-  //   },
-  // ];
-
-  // Edges: connect nodes
-  // const edges: Edge[] = [
-  // {
-  //   id: "e1",
-  //   source: "A1",
-  //   target: "B1",
-  //   markerEnd: { type: MarkerType.Arrow },
-  // },
-  // {
-  //   id: "e2",
-  //   source: "B1",
-  //   target: "C1",
-  //   markerEnd: { type: MarkerType.Arrow },
-  // },
-  // ];
+  const handleNodeClick = (_: React.MouseEvent, node: Node) => {
+    if (node?.data?.message) return;
+    setSelectedNodeId(node.id);
+    setOpen(true);
+  };
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      nodeTypes={nodeTypes}
-      edges={edges}
-      edgeTypes={edgeTypes}
-      fitView
-      zoomOnScroll={false}
-    >
-      {/* <Background /> */}
-      {/* <MiniMap /> */}
-      <Controls />
-    </ReactFlow>
+    <>
+      <NodePopup
+        nodeId={selectedNodeId}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
+
+      <ReactFlow
+        nodes={nodes}
+        nodeTypes={nodeTypes}
+        edges={edges}
+        edgeTypes={edgeTypes}
+        fitView
+        zoomOnScroll={false}
+        onNodeClick={handleNodeClick}
+      >
+        {/* <Background /> */}
+        {/* <MiniMap /> */}
+        <Controls />
+      </ReactFlow>
+    </>
   );
 }

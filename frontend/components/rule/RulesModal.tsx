@@ -8,6 +8,7 @@ interface RulesModalProps {
   rules: Record<string, any>[];
   onClose: () => void;
   onCreate: () => void;
+  onClone: (n: Record<string, any>) => void;
   onActive: (n: number) => void;
 }
 
@@ -17,6 +18,7 @@ export default function RulesModal({
   rules,
   onClose,
   onCreate,
+  onClone,
   onActive,
 }: RulesModalProps) {
   return (
@@ -53,14 +55,15 @@ export default function RulesModal({
                     </span>
                   )}
                 </div>
+                <div className="font-bold text-purple-700">
+                  <span className="font-medium">ID:</span> {rule?.trial.id} (
+                  {rule?.trial.version})
+                </div>
+
                 <div className="text-sm text-gray-600 italic">
                   {rule?.metadata.description}
                 </div>
 
-                <div className="text-sm">
-                  <span className="font-medium">ID:</span> {rule?.trial.id} (
-                  {rule?.trial.version})
-                </div>
                 <div className="text-sm">
                   <span className="font-medium">Jurisdiction:</span>{" "}
                   {rule?.trial.jurisdiction.join(", ")}
@@ -79,14 +82,24 @@ export default function RulesModal({
                   {new Date(rule?.metadata.created_at).toLocaleDateString()}
                 </div>
 
-                <button
-                  onClick={() => {
-                    onActive(idx);
-                  }}
-                  className="text-purple-700 border rounded-lg p-1 font-semibold"
-                >
-                  Set active
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      onActive(idx);
+                    }}
+                    className="text-purple-700 border rounded-lg p-1 font-semibold"
+                  >
+                    Set active
+                  </button>
+                  <button
+                    onClick={() => {
+                      onClone(rule);
+                    }}
+                    className="text-purple-700 border rounded-lg p-1 font-semibold"
+                  >
+                    Create new version
+                  </button>
+                </div>
               </div>
             ))}
 

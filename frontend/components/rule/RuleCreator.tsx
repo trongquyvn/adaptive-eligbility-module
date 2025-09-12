@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Rule {
   trial: {
@@ -18,21 +18,23 @@ interface Rule {
 }
 
 interface RuleCreatorProps {
+  open: boolean;
   onCreate: (rule: Rule) => void;
   onCancel?: () => void;
-  open: boolean;
+  initialData?: Rule;
 }
 
 export default function RuleCreator({
   open,
   onCreate,
   onCancel,
+  initialData,
 }: RuleCreatorProps) {
-  const initForm = {
+  const defaultForm: Rule = {
     trial: {
       id: "",
       version: "",
-      jurisdiction: ["AU", "NZ", "UK"] as string[],
+      jurisdiction: ["AU", "NZ", "UK"],
       effective_from: new Date().toISOString(),
     },
     metadata: {
@@ -42,7 +44,17 @@ export default function RuleCreator({
       created_at: new Date().toISOString(),
     },
   };
-  const [form, setForm] = useState(initForm);
+
+  const [form, setForm] = useState<Rule>(initialData || defaultForm);
+
+  // ✅ Update lại form nếu initialData thay đổi
+  useEffect(() => {
+    if (initialData) {
+      setForm(initialData);
+    } else {
+      setForm(defaultForm);
+    }
+  }, [initialData]);
 
   const handleChange = (
     section: "trial" | "metadata" | "root",
@@ -50,17 +62,17 @@ export default function RuleCreator({
     value: string | boolean
   ) => {
     if (section === "trial") {
-      setForm({
-        ...form,
-        trial: { ...form.trial, [field]: value },
-      });
+      setForm((prev) => ({
+        ...prev,
+        trial: { ...prev.trial, [field]: value },
+      }));
     } else if (section === "metadata") {
-      setForm({
-        ...form,
-        metadata: { ...form.metadata, [field]: value },
-      });
+      setForm((prev) => ({
+        ...prev,
+        metadata: { ...prev.metadata, [field]: value },
+      }));
     } else {
-      setForm({ ...form, [field]: value as boolean });
+      setForm((prev) => ({ ...prev, [field]: value as any }));
     }
   };
 
@@ -69,17 +81,22 @@ export default function RuleCreator({
       .split(",")
       .map((v) => v.trim())
       .filter(Boolean);
-    setForm({ ...form, trial: { ...form.trial, jurisdiction: arr } });
+    setForm((prev) => ({
+      ...prev,
+      trial: { ...prev.trial, jurisdiction: arr },
+    }));
   };
 
   const handleSubmit = () => {
     if (!form.trial.id || !form.trial.version || !form.metadata.title) return;
     onCreate(form);
-    setForm(initForm);
+    setForm(defaultForm);
   };
+
   const isValid = form.trial.id && form.trial.version && form.metadata.title;
 
-  if (!open) return <></>;
+  if (!open) return null;
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">

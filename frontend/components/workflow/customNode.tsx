@@ -1,9 +1,12 @@
+import { cateList } from "@/constants";
 import React from "react";
 import { NodeProps, Handle, Position } from "reactflow";
 
 const handleCss = {
   opacity: 0,
 };
+
+const getCateName = (id: string) => cateList.find((e) => e.id === id)?.name;
 
 export function RoundedRectangleNode({ data }: NodeProps) {
   let customCss = {};
@@ -16,19 +19,11 @@ export function RoundedRectangleNode({ data }: NodeProps) {
     };
   }
 
-  if (data.first) {
-    customCss = {
-      border: "var(--color-blue-700) 2px solid",
-      color: "var(--color-blue-700)",
-      fontWeight: "700",
-    };
-  }
-
   return (
     <div
       style={{
-        width: 90,
-        height: 30,
+        width: 120,
+        height: 50,
         borderRadius: 6,
         border: "black 1px solid",
         display: "flex",
@@ -41,7 +36,12 @@ export function RoundedRectangleNode({ data }: NodeProps) {
         ...customCss,
       }}
     >
-      {data.label}
+      <div>
+        <div className="font-bold text-purple-600">
+          {getCateName(data.cate)}
+        </div>
+        <div>{data.label}</div>
+      </div>
 
       <Handle
         type="target"
@@ -61,6 +61,34 @@ export function RoundedRectangleNode({ data }: NodeProps) {
         id="no"
         position={Position.Bottom}
         style={{ bottom: -3, ...handleCss }}
+      />
+    </div>
+  );
+}
+
+export function CircleNode({ data }: NodeProps) {
+  return (
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: "50%",
+        background: "#9333ea",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 10,
+        fontWeight: "bold",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+      }}
+    >
+      {data.label}
+
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ ...handleCss }}
       />
     </div>
   );

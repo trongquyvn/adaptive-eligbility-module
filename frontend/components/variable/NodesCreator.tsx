@@ -3,6 +3,10 @@
 import { useState } from "react";
 import TagInput from "@/components/common/TagInput";
 import { cateList } from "@/constants";
+import { objExpandKeys } from "@/lib/common";
+import { useToast } from "@/context/ToastContext";
+import { usePatients } from "@/context/PatientContext";
+import { updateRule } from "@/lib/rule";
 
 type NodeType =
   | "BOOLEAN"
@@ -98,6 +102,9 @@ export default function CreateNode({
       reason_on_exclude: "",
     },
   ]);
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
+  const alertError = (v: string) => showToast(v, "error");
 
   const generatedId = form?.name?.trim()?.toLowerCase().replace(/\s+/g, "_");
 
@@ -105,38 +112,41 @@ export default function CreateNode({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    if (!nodeType) return;
+  const handleSave = async () => {
+    if (!nodeType) {
+      alertError("Please choose node type");
+      return;
+    }
 
     // validate base
     if (!form.name || !form.cate) {
-      alert("Missing name or cate");
+      alertError("Missing name or cate");
       return;
     }
 
     // validate special types
     if (nodeType === "IF") {
       if (!form.cond || !form.then || !form.else) {
-        alert("Missing cond/then/else");
+        alertError("Missing cond/then/else");
         return;
       }
     } else if (nodeType === "DOMAIN_MAP") {
       if (domainItems.some((i) => !i.domain_id || !i.rule)) {
-        alert("Missing domain_id or rule in DOMAIN_MAP items");
+        alertError("Missing domain_id or rule in DOMAIN_MAP items");
         return;
       }
     } else if (nodeType === "ANY" || nodeType === "ALL") {
       if (!form.children || form.children.length === 0) {
-        alert("Missing children");
+        alertError("Missing children");
         return;
       }
     } else if (nodeType === "REGIMEN_RESOLVE") {
       if (!form.input) {
-        alert("Missing regimen input");
+        alertError("Missing regimen input");
         return;
       }
       if (constraints.some((c) => !c.regimen_id || !c.exclude_if)) {
-        alert("Missing regimen_id or exclude_if in constraints");
+        alertError("Missing regimen_id or exclude_if in constraints");
         return;
       }
     } else {
@@ -145,7 +155,7 @@ export default function CreateNode({
         (f) => !form[f.key] || form[f.key].toString().trim() === ""
       );
       if (missing.length > 0) {
-        alert(
+        alertError(
           `Missing required fields: ${missing.map((m) => m.label).join(", ")}`
         );
         return;
@@ -163,20 +173,39 @@ export default function CreateNode({
     } else if (nodeType === "ANY" || nodeType === "ALL") {
       newNode.children = form.children;
     } else if (nodeType === "REGIMEN_RESOLVE") {
-      newNode.input = form.input;
-      newNode.require_min_regimens = form.require_min_regimens;
+      newNode["input.eligible_domains_ref"] = form.input;
+      newNode.require_min_regimens = form.require_min_regimens || 1;
       newNode.reason_on_fail = form.reason_on_fail;
       newNode.constraints = constraints;
     } else {
       newNode = { ...newNode, ...form };
     }
+    const newNodeData = objExpandKeys(newNode);
 
-    console.log("Created node:", newNode);
+    const nodes = rule?.logic?.nodes || {};
+    const check = nodes[generatedId];
+    if (check) {
+      showToast("Node already exists!", "info");
+    } else {
+      nodes[generatedId] = newNodeData;
+      const newRule = {
+        ...rule,
+        logic: {
+          ...rule?.logic,
+          nodes,
+        },
+      };
+      const result = await updateRule(rule._id, newRule);
+      if (result) {
+        updateActiveRule(result);
+        showToast("Add Node!", "success");
+      }
+    }
 
     // reset
     setOpen(false);
     setNodeType("");
-    setForm({});
+    setForm({ cate: "1" });
     setDomainItems([{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
     setConstraints([
       {
@@ -264,6 +293,7 @@ export default function CreateNode({
                         value={form[f.key]}
                         onChange={(e) => handleChange(f.key, e.target.value)}
                       >
+                        <option key="null">Select variable</option>
                         {variables.map((n) => (
                           <option key={n} value={n}>
                             {n}
@@ -283,6 +313,7 @@ export default function CreateNode({
                         value={form[f.key]}
                         onChange={(e) => handleChange(f.key, e.target.value)}
                       >
+                        <option key="null">Select operator</option>
                         {"<, >, <=, >=, ==, !=".split(",").map((n) => (
                           <option key={n} value={n}>
                             {n}
@@ -317,6 +348,7 @@ export default function CreateNode({
                       value={form[k] || ""}
                       onChange={(e) => handleChange(k, e.target.value)}
                     >
+                      <option key="null">Select node</option>
                       {nodes.map((n) => (
                         <option key={n} value={n}>
                           {n}
@@ -410,6 +442,7 @@ export default function CreateNode({
                     value={form.input || ""}
                     onChange={(e) => handleChange("input", e.target.value)}
                   >
+                    <option key="null">Select domain</option>
                     {domainNodes.map((r) => (
                       <option key={r} value={r}>
                         {r}
@@ -446,6 +479,7 @@ export default function CreateNode({
                           setConstraints(copy);
                         }}
                       >
+                        <option key="null">Select regimen</option>
                         {regimens.map((r) => (
                           <option key={r} value={r}>
                             {r}
@@ -464,6 +498,7 @@ export default function CreateNode({
                           setConstraints(copy);
                         }}
                       >
+                        <option key="null">Select node</option>
                         {nodes.map((n) => (
                           <option key={n} value={n}>
                             {n}
@@ -510,7 +545,6 @@ export default function CreateNode({
               </button>
               <button
                 onClick={handleSave}
-                disabled={!nodeType}
                 className="px-3 py-1 bg-blue-600 text-white rounded"
               >
                 Save

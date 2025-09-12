@@ -8,6 +8,7 @@ import RulesModal from "@/components/rule/RulesModal";
 import RuleCreator from "@/components/rule/RuleCreator";
 import { useToast } from "@/context/ToastContext";
 import { API_BASE_URL } from "@/constants";
+import { bumpVersion } from "@/lib/common";
 
 async function createRules(body: any) {
   const res = await fetch(`${API_BASE_URL}/api/roadmap`, {
@@ -27,6 +28,7 @@ export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [initialData, setInitialData] = useState<any>(undefined);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { logout } = useAuth();
   const { rule, rules, addRule, activeRule, setActiveRule } = usePatients();
@@ -78,8 +80,20 @@ export default function Header() {
           setActiveRule(e);
           setOpen(false);
         }}
+        onClone={(e) => {
+          setInitialData({
+            trial: {
+              ...e.trial,
+              version: bumpVersion(e.trial.version),
+            },
+            metadata: e.metadata,
+          });
+          setOpenCreate(true);
+          setOpen(false);
+        }}
       />
       <RuleCreator
+        initialData={initialData}
         open={openCreate}
         onCreate={async (rule) => {
           const result = await createRules(rule);

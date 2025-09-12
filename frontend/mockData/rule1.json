@@ -314,14 +314,14 @@
     },
     "flow": [
       {
-        "id": "patient_check_eCRF",
-        "on_pass": { "next": "database_checking" },
-        "start": true
-      },
-      {
         "id": "database_checking",
         "on_fail": { "next": "CAP_assessment" },
         "on_pass": { "next": "different_patient" }
+      },
+      {
+        "id": "patient_check_eCRF",
+        "on_pass": { "next": "database_checking" },
+        "start": true
       },
       {
         "id": "different_patient",

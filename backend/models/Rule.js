@@ -33,12 +33,12 @@ const RegimenSchema = new mongoose.Schema(
 );
 
 // const LogicNodeSchema = new mongoose.Schema({}, { strict: false, _id: false });
-
 const FlowSchema = new mongoose.Schema(
   {
     id: String,
     on_fail: { outcome: String, code: String, next: String },
     on_pass: { outcome: String, code: String, next: String },
+    start: Boolean,
   },
   { _id: false }
 );

@@ -8,6 +8,9 @@ import { Edge, MarkerType, Node } from "reactflow";
 import getLayoutElements from "@/lib/elk";
 import { useEffect, useState } from "react";
 import { exportJsonToFile } from "@/lib/common";
+import JsonEditor from "../common/JsonEditor";
+import { updateRule } from "@/lib/rule";
+import { useToast } from "@/context/ToastContext";
 
 const renderOutcome = (data: any) => {
   return (
@@ -23,7 +26,7 @@ const MyPatientWorkflowFlow = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
 
-  const { rule } = usePatients();
+  const { rule, ruleUpdate } = usePatients();
   const flow = rule?.logic?.flow;
   const ruleNodes = rule?.logic?.nodes || {};
   const nodeKeys = Object.keys(ruleNodes);
@@ -40,7 +43,17 @@ const MyPatientWorkflowFlow = () => {
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const rawNodes: Node[] = [];
+  const rawNodes: Node[] = [
+    {
+      id: "start",
+      type: "circleNode",
+      data: {
+        label: "Start",
+      },
+      position: { x: 0, y: 0 },
+    },
+  ];
+
   nodeKeys.forEach((e) => {
     if (isNodeInFlow(e)) {
       const node = ruleNodes[e];
@@ -92,6 +105,15 @@ const MyPatientWorkflowFlow = () => {
     let hasIf: boolean = false;
     if (e?.on_fail && e?.on_pass) {
       hasIf = true;
+    }
+    const isStart = Boolean(e?.start);
+    if (isStart) {
+      rawEdges.push({
+        id: "start_edge",
+        source: "start",
+        target: e.id,
+        markerEnd: { type: MarkerType.Arrow },
+      });
     }
 
     if (e?.on_fail?.outcome) {
@@ -167,12 +189,23 @@ const MyPatientWorkflowFlow = () => {
     }
   });
 
+  // if (rawEdges.length) {
+  //   rawEdges.unshift({
+  //     id: "start_edge",
+  //     source: "start",
+  //     target: rawEdges?.[0]?.source,
+  //     markerEnd: { type: MarkerType.Arrow },
+  //   });
+  // }
+
   useEffect(() => {
+    console.log("Diagram update: ", ruleUpdate);
     getLayoutElements(rawNodes, rawEdges).then(({ nodes, edges }) => {
       setNodes(nodes);
       setEdges(edges);
     });
-  }, [rawEdges, rawNodes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ruleUpdate]);
 
   return (
     <div className="relative">
@@ -208,7 +241,7 @@ const MyPatientWorkflowFlow = () => {
           className={
             isOpen
               ? "bg-white rounded-lg h-full w-full p-6 relative"
-              : "h-[600px] overflow-auto bg-white"
+              : "h-[600px] overflow-auto bg-white relative"
           }
         >
           <PatientWorkflowFlow nodes={nodes} edges={edges} />
@@ -229,9 +262,16 @@ const MyPatientWorkflowFlow = () => {
 
 const JSONFile = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { rule } = usePatients();
-  const flow = rule?.logic?.flow;
-  const ruleNodes = rule?.logic?.nodes;
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
+
+  const onSave = async (data: any) => {
+    const result = await updateRule(rule._id, data);
+    if (result) {
+      updateActiveRule(result);
+      showToast("Updated!", "success");
+    }
+  };
 
   return (
     <div className="bg-gray-100 p-4 rounded relative">
@@ -256,29 +296,33 @@ const JSONFile = () => {
         </button>
       </div>
 
-      <div className="text-xl font-semibold">Flow</div>
-      <pre>{JSON.stringify(flow, null, 2)}</pre>
-      <br />
-      <div className="text-xl font-semibold">Rule</div>
-      <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
+      <div
+        className={
+          isOpen
+            ? "fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+            : ""
+        }
+      >
+        <div
+          className={
+            isOpen
+              ? "bg-white rounded-lg w-11/12 p-6 h-11/12 overflow-auto relative"
+              : ""
+          }
+        >
+          <div className="text-xl font-semibold">Trial builder</div>
+          <JsonEditor onSave={onSave} value={rule} />
 
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg w-11/12 p-6 h-11/12 overflow-auto relative">
-            <div className="text-xl font-semibold">Flow</div>
-            <pre>{JSON.stringify(flow, null, 2)}</pre>
-            <br />
-            <div className="text-xl font-semibold">Rule</div>
-            <pre>{JSON.stringify(ruleNodes, null, 2)}</pre>
+          {isOpen && (
             <button
               onClick={() => setIsOpen(false)}
               className="fixed top-2 right-2 cursor-pointer text-3xl"
             >
               ✕
             </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
