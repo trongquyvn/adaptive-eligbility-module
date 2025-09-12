@@ -4,7 +4,7 @@ import { usePatients } from "@/context/PatientContext";
 
 export default function Index() {
   const { rule } = usePatients();
-  const variables = rule?.variables || []
+  const variables = rule?.variables.filter((e: any) => e.type !== "DATABASE") || [];
 
   return (
     <div>

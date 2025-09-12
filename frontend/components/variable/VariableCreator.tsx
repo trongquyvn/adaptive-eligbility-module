@@ -26,7 +26,7 @@ export default function VariableCreator() {
   const [listValues, setListValues] = useState<string[]>([]);
   const [multiple, setMultiple] = useState(false);
 
-  const generatedId = form.name.trim().toLowerCase().replace(/\s+/g, "_");
+  const generatedId = form.name.trim().toLowerCase().replace(/\s+/g, ".");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +69,14 @@ export default function VariableCreator() {
     <div className="">
       <button
         onClick={() => setShowModal(true)}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+        className="px-4 py-2 bg-blue-600 text-white shadow hover:bg-blue-700"
       >
         + Add Variable
       </button>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-40 z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4">Create Variable</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,7 +87,7 @@ export default function VariableCreator() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border rounded"
                   required
                 />
               </div>
@@ -99,7 +99,7 @@ export default function VariableCreator() {
                   type="text"
                   value={generatedId}
                   disabled
-                  className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-100 shadow-sm text-gray-600"
+                  className="mt-1 block w-full border-gray-200 bg-gray-100 shadow-sm text-gray-600"
                 />
               </div>
 
@@ -109,13 +109,13 @@ export default function VariableCreator() {
                 <select
                   value={form.type}
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border-gray-300 shadow-sm"
                 >
                   <option value="BOOLEAN">BOOLEAN</option>
-                  <option value="TIME">TIME</option>
+                  <option value="WINDOW_TIME">WINDOW_TIME</option>
                   <option value="NUMBER">NUMBER</option>
                   <option value="DATA">DATA</option>
-                  <option value="CODES">CODES</option>
+                  {/* <option value="CODES">CODES</option> */}
                 </select>
               </div>
 
@@ -145,13 +145,13 @@ export default function VariableCreator() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50"
+                  className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  className="px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Save
                 </button>

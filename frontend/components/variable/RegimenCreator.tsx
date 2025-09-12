@@ -66,7 +66,7 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-40 z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-96">
             <h2 className="text-lg font-semibold mb-4">Create Regimen</h2>
             <form onSubmit={handleSubmit} className="space-y-4">

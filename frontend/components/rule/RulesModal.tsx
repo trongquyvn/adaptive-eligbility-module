@@ -79,7 +79,12 @@ export default function RulesModal({
                   {new Date(rule?.metadata.created_at).toLocaleDateString()}
                 </div>
 
-                <button onClick={() => { onActive(idx) }} className="p-2 font-semibold">
+                <button
+                  onClick={() => {
+                    onActive(idx);
+                  }}
+                  className="text-purple-700 border rounded-lg p-1 font-semibold"
+                >
                   Set active
                 </button>
               </div>

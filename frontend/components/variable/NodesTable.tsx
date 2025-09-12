@@ -28,7 +28,12 @@ function renderData(node: any) {
 
     case "ANY":
     case "ALL":
-      return <div>Children: {node?.children?.join(", ")}</div>;
+      return (
+        <div>
+          Children:{" "}
+          <span className="font-semibold">{node?.children?.join(", ")}</span>
+        </div>
+      );
 
     case "TIME_WINDOW":
       return (
@@ -56,8 +61,13 @@ function renderData(node: any) {
             {node?.items?.map((item: any, idx: number) => (
               <li key={idx}>
                 <div className="inline-flex flex-col">
-                  <div className="inline">Domain: {item?.domain_id}</div>
-                  <div className="inline">Rule: {item?.rule}</div>
+                  <div className="inline">
+                    Domain:{" "}
+                    <span className="font-semibold">{item?.domain_id}</span>
+                  </div>
+                  <div className="inline">
+                    Rule: <span className="font-semibold">{item?.rule}</span>
+                  </div>
                 </div>
               </li>
             ))}
@@ -76,8 +86,14 @@ function renderData(node: any) {
               {node?.constraints?.map((c: any, idx: number) => (
                 <li key={idx}>
                   <div className="inline-flex flex-col">
-                    <div className="inline">Regimen: {c?.regimen_id}</div>
-                    <div className="inline">Exclude If: {c?.exclude_if}</div>
+                    <div className="inline">
+                      Regimen:{" "}
+                      <span className="font-semibold">{c?.regimen_id}</span>
+                    </div>
+                    <div className="inline">
+                      Exclude If:{" "}
+                      <span className="font-semibold">{c?.exclude_if}</span>
+                    </div>
                   </div>
                 </li>
               ))}

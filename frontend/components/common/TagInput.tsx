@@ -9,7 +9,8 @@ interface TagInputProps {
   placeholder?: string;
   required?: boolean;
   options?: string[];
-  color?: "purple" | "green" | "red" | "yellow" | "blue" | "gray"; 
+  color?: "purple" | "green" | "red" | "yellow" | "blue" | "gray";
+  noAdd?: boolean;
 }
 
 export default function TagInput({
@@ -20,6 +21,7 @@ export default function TagInput({
   required = false,
   options = [],
   color = "gray",
+  noAdd = true,
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -32,7 +34,7 @@ export default function TagInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim()) {
+    if (e.key === "Enter" && inputValue.trim() && !noAdd) {
       e.preventDefault();
       handleAdd(inputValue);
     }

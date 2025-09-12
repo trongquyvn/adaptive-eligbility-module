@@ -66,22 +66,22 @@
     {
       "id": "antibiotics_1",
       "name": "antibiotics_1",
-      "type": "COMPARE"
+      "type": "NUMBER"
     },
     {
       "id": "antibiotics_2",
       "name": "antibiotics_2",
-      "type": "COMPARE"
+      "type": "NUMBER"
     },
     {
       "id": "steroids_1",
       "name": "steroids_1",
-      "type": "COMPARE"
+      "type": "NUMBER"
     },
     {
       "id": "steroids_2",
       "name": "steroids_2",
-      "type": "COMPARE"
+      "type": "NUMBER"
     },
     {
       "id": "beta_lactam_allergy",
@@ -91,7 +91,7 @@
     {
       "id": "phys",
       "name": "shock_or_severe",
-      "type": "COMPARE"
+      "type": "NUMBER"
     },
     {
       "id": "consent.required",

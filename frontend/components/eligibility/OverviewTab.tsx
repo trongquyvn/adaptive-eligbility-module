@@ -1,3 +1,5 @@
+"use client";
+
 import { usePatients } from "@/context/PatientContext";
 import PatientWorkflowFlow from "@/components/workflow/PatientWorkflowFlow";
 import TabsMenu from "@/components/common/TabsMenu";
@@ -23,7 +25,7 @@ const MyPatientWorkflowFlow = () => {
 
   const { rule } = usePatients();
   const flow = rule?.logic?.flow;
-  const ruleNodes = rule?.logic?.nodes;
+  const ruleNodes = rule?.logic?.nodes || {};
   const nodeKeys = Object.keys(ruleNodes);
 
   const getNodeFlow = (id: string) => flow.find((e: any) => e.id === id);
@@ -37,6 +39,7 @@ const MyPatientWorkflowFlow = () => {
     });
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawNodes: Node[] = [];
   nodeKeys.forEach((e) => {
     if (isNodeInFlow(e)) {
@@ -83,6 +86,7 @@ const MyPatientWorkflowFlow = () => {
     }
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawEdges: Edge[] = [];
   flow.forEach((e: any, i: number) => {
     let hasIf: boolean = false;
@@ -168,7 +172,7 @@ const MyPatientWorkflowFlow = () => {
       setNodes(nodes);
       setEdges(edges);
     });
-  }, []);
+  }, [rawEdges, rawNodes]);
 
   return (
     <div className="relative">

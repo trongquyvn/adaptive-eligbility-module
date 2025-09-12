@@ -14,6 +14,7 @@ import NodesTab from "@/components/eligibility/NotesTab";
 import VariableCreator from "@/components/variable/VariableCreator";
 import DomainCreator from "@/components/variable/DomainCreator";
 import RegimenCreator from "@/components/variable/RegimenCreator";
+import NodesCreator from "@/components/variable/NodesCreator";
 
 import { useState } from "react";
 import { usePatients } from "@/context/PatientContext";
@@ -32,7 +33,38 @@ const tabs = [
 export default function RoadmapPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const { rule } = usePatients();
-  const domains = rule?.domain_catalog || [];
+
+  const domainNodes: string[] = [];
+  const nodes: string[] = [];
+  Object.keys(rule?.logic?.nodes || {}).forEach((e) => {
+    const node = rule?.logic?.nodes[e];
+    if (node.type === "DOMAIN_MAP") {
+      domainNodes.push(e);
+    } else {
+      if (node.type !== "DATABASE") {
+        nodes.push(e);
+      }
+    }
+  });
+
+  const domainsCatalog = rule?.domain_catalog || [];
+  const domains: string[] = [];
+
+  domainsCatalog.map((e: any) => {
+    domains.push(e.id);
+  });
+
+  const regimens: string[] = [];
+  (rule?.regimen_catalog || []).map((e: any) => {
+    regimens.push(e.id);
+  });
+
+  const variables: string[] = [];
+  (rule?.variables || []).map((e: any) => {
+    if (e.type !== "DATABASE") {
+      variables.push(e.id);
+    }
+  });
 
   return (
     <section>
@@ -56,7 +88,16 @@ export default function RoadmapPage() {
 
         {activeTab === "domain" && <DomainCreator />}
         {activeTab === "variables" && <VariableCreator />}
-        {activeTab === "regimen" && <RegimenCreator domains={domains} />}
+        {activeTab === "regimen" && <RegimenCreator domains={domainsCatalog} />}
+        {activeTab === "node" && (
+          <NodesCreator
+            nodes={nodes}
+            domainNodes={domainNodes}
+            domains={domains}
+            regimens={regimens}
+            variables={variables}
+          />
+        )}
       </div>
 
       <TabsMenu tabs={tabs} callBack={setActiveTab} />

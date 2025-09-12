@@ -23,6 +23,11 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    body.logic = {
+      flow: [],
+      nodes: {},
+    }
+    console.log('body: ', body);
     const api = `${API_CALL_URL}/rules`;
     const res = await fetch(api, {
       method: "POST",
