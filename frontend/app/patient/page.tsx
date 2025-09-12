@@ -4,27 +4,35 @@ import { useState } from "react";
 import PatientTable from "@/components/patient/PatientTable";
 import CreatePatientDialog from "@/components/patient/CreatePatientDialog";
 import { usePatients } from "@/context/PatientContext";
+import { useToast } from "@/context/ToastContext";
+import { API_BASE_URL } from "@/constants";
 
-interface Patient {
-  id: string;
-  site: string;
-  date: string;
-  status: string;
+async function savePatients(body: any) {
+  const res = await fetch(`${API_BASE_URL}/api/patient`, {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error("Failed to save patients");
+  return res.json();
 }
 
 export default function PatientPage() {
-  const { patients: initPatients } = usePatients();
+  const { activeDataKey, patients: initPatients, addPatient } = usePatients();
+  const { showToast } = useToast();
 
-  const viewPatients = initPatients.map((e) => {
+  const patients = initPatients.map((e) => {
     return {
-      id: e.id,
+      id: e.patient_id,
       site: e.site || "Site A",
-      date: e.createAt || '',
-      status: e?.eligibility?.status,
+      date: e.createAt || "",
+      eligibility: e.eligibility,
     };
   });
-
-  const [patients, setPatients] = useState<Patient[]>(viewPatients);
 
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
     useState(false);
@@ -33,7 +41,10 @@ export default function PatientPage() {
     setIsCreatePatientModalOpen(true);
   };
 
-  const handleCreatePatientSubmit = (patientData: Omit<Patient, "id">) => {
+  const handleCreatePatientSubmit = async (
+    patientData: any,
+    isDraft: boolean
+  ) => {
     // Generate patient ID
     const patientId = `#${Math.floor(Math.random() * 10000)
       .toString()
@@ -41,13 +52,24 @@ export default function PatientPage() {
       65 + Math.floor(Math.random() * 26)
     )}`;
 
-    const newPatient: Patient = {
-      id: patientId,
-      ...patientData,
+    const jurisdiction = patientData.jurisdiction;
+    delete patientData.jurisdiction;
+    const newPatient: any = {
+      patient_id: patientId,
+      jurisdiction,
+      data: {
+        [activeDataKey]: patientData,
+      },
+      eligibility: {
+        isDraft,
+      },
     };
 
-    setPatients((prev) => [...prev, newPatient]);
-    setIsCreatePatientModalOpen(false);
+    const result = await savePatients(newPatient);
+    if (result) {
+      addPatient(result);
+      showToast("Patient is save", "success");
+    }
   };
 
   return (
@@ -74,7 +96,9 @@ export default function PatientPage() {
       <CreatePatientDialog
         isOpen={isCreatePatientModalOpen}
         onClose={() => setIsCreatePatientModalOpen(false)}
-        onCreatePatient={handleCreatePatientSubmit}
+        onCreatePatient={(e, a) => {
+          handleCreatePatientSubmit(e, a);
+        }}
       />
     </section>
   );

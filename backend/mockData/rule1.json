@@ -19,11 +19,6 @@
       "type": "BOOLEAN"
     },
     {
-      "id": "database",
-      "name": "database_checking",
-      "type": "DATABASE"
-    },
-    {
       "id": "new",
       "name": "different_patient",
       "type": "BOOLEAN"
@@ -31,7 +26,7 @@
     {
       "id": "support.started_time",
       "name": "randomised_since",
-      "type": "TIME"
+      "type": "TIME_WINDOW"
     },
     {
       "id": "cap.fever",
@@ -314,14 +309,14 @@
     },
     "flow": [
       {
-        "id": "patient_check_eCRF",
-        "on_pass": { "next": "database_checking" },
-        "start": true
-      },
-      {
         "id": "database_checking",
         "on_fail": { "next": "CAP_assessment" },
         "on_pass": { "next": "different_patient" }
+      },
+      {
+        "id": "patient_check_eCRF",
+        "on_pass": { "next": "database_checking" },
+        "start": true
       },
       {
         "id": "different_patient",

@@ -347,7 +347,7 @@ export default function OverviewTab() {
               exportJsonToFile(rule, "diagram.json");
             }}
           >
-            Export
+            Validate & Export
           </button>
         </div>
       </div>

@@ -118,7 +118,11 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
 
   const filteredNodes = Object.entries(nodes).filter(
     ([_, node]: [string, any]) =>
-      activeCate === "all" ? true : node?.cate === activeCate
+      node?.type !== "DATABASE"
+        ? activeCate === "all"
+          ? true
+          : node?.cate === activeCate
+        : false
   );
 
   return (

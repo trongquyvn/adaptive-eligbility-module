@@ -62,7 +62,7 @@ export default function Modal({ isOpen, onClose, children, title }: ModalProps) 
       {/* Modal Content */}
       <div
         ref={modalRef}
-        className="relative bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="relative bg-white rounded-lg shadow-xl max-w-[700px] w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}

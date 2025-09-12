@@ -47,3 +47,110 @@ export function bumpVersion(version: string): string {
     return `${prefix}${major}.1`;
   }
 }
+
+type Node = any;
+function collectInputVarsFromNode(
+  node: Node,
+  nodes: Record<string, Node>,
+  acc: Set<string>
+) {
+  if (!node) return;
+
+  // Nếu node có input.var
+  if (node.input?.var) {
+    acc.add(node.input.var);
+  }
+
+  switch (node.type) {
+    case "ALL":
+    case "ANY":
+      if (Array.isArray(node.children)) {
+        node.children.forEach((childId: string | Node) => {
+          const childNode =
+            typeof childId === "string" ? nodes[childId] : childId;
+          collectInputVarsFromNode(childNode, nodes, acc);
+        });
+      }
+      break;
+
+    case "DOMAIN_MAP":
+      if (Array.isArray(node.items)) {
+        node.items.forEach((item: any) => {
+          const child =
+            typeof item.rule === "string" ? nodes[item.rule] : item.rule;
+          collectInputVarsFromNode(child, nodes, acc);
+        });
+      }
+      break;
+
+    case "REGIMEN_RESOLVE":
+      if (node.constraints?.exclude_if) {
+        const excludeIf = node.constraints.exclude_if;
+        const child =
+          typeof excludeIf === "string" ? nodes[excludeIf] : excludeIf;
+        collectInputVarsFromNode(child, nodes, acc);
+      }
+      break;
+
+    case "IF":
+      // cond
+      if (node.cond) {
+        const condNode =
+          typeof node.cond === "string" ? nodes[node.cond] : node.cond;
+        collectInputVarsFromNode(condNode, nodes, acc);
+      }
+      // then
+      if (node.then) {
+        const thenNode =
+          typeof node.then === "string" ? nodes[node.then] : node.then;
+        collectInputVarsFromNode(thenNode, nodes, acc);
+      }
+      // else
+      if (node.else) {
+        const elseNode =
+          typeof node.else === "string" ? nodes[node.else] : node.else;
+        collectInputVarsFromNode(elseNode, nodes, acc);
+      }
+      break;
+  }
+}
+
+export function collectInputVars(rule: any): string[] {
+  const acc = new Set<string>();
+  const { flow, nodes } = rule.logic;
+
+  flow.forEach((step: any) => {
+    const node = typeof step === "string" ? nodes[step] : nodes[step.id];
+    collectInputVarsFromNode(node, nodes, acc);
+  });
+
+  return Array.from(acc);
+}
+
+export function getValueByPath(obj: any, path: string) {
+  return path.split(".").reduce((acc, part) => acc?.[part], obj);
+}
+
+export function flattenObj(
+  obj: Record<string, any>,
+  parentKey = "",
+  res: Record<string, any> = {}
+) {
+  for (const [key, value] of Object.entries(obj)) {
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenObj(value, newKey, res);
+    } else {
+      res[newKey] = value;
+    }
+  }
+  return res;
+}
+
+export function isoToLocalInput(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}

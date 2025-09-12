@@ -2,52 +2,156 @@
 
 import { useState } from "react";
 import Breadcrumb from "../common/Breadcrumb";
+import { usePatients } from "@/context/PatientContext";
+import PatientInfo from "./PatientInfo";
+import { useToast } from "@/context/ToastContext";
+import { Pencil } from "lucide-react";
+import CreatePatientDialog from "./CreatePatientDialog";
+import { collectInputVars, flattenObj, isoToLocalInput } from "@/lib/common";
+import { updatePatient } from "@/lib/patient";
 
-interface PatientDetailPageProps {
-  patient: {
-    id: string;
-    age: number;
-    sex: string;
-    capFeatures: string[];
-    contraindications: string[];
-    icuTimings: string[];
-    consent: string;
-    clinicalState: string[];
-    eligibility: {
-      status: "Eligible" | "Ineligible" | "Pending";
-      dateScreened: string;
-      reason: string;
-    };
-  };
+function EditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center p-1 text-gray-500 hover:text-purple-600"
+    >
+      <Pencil className="w-6 h-6" />
+    </button>
+  );
 }
 
-export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
-  console.log("patient: ", patient);
-  const [isOpen, setIsOpen] = useState(false);
+function StatusTag({ value }: { value: any }) {
+  return (
+    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+      {value}
+    </span>
+  );
+}
 
-  const items = [
-    {
-      href: "/patient",
-      label: "Patient List",
-    },
-    {
-      label: "Patient Details",
-    },
-  ];
+const items = [
+  {
+    href: "/patient",
+    label: "Patient List",
+  },
+  {
+    label: "Patient Details",
+  },
+];
+
+function countPrefix(arr: string[], prefix: string): number {
+  return arr.filter((s) => s.startsWith(prefix)).length;
+}
+
+export default function PatientDetailPage({ patient }: any) {
+  const { rule, updateActivePatient, activeDataKey } = usePatients();
+  const variables = rule?.variables || [];
+  const inputVars = collectInputVars(rule);
+  const variablesPatient = variables.filter((e: any) =>
+    inputVars.includes(e.id)
+  );
+
+  const { eligibility = {}, jurisdiction } = patient;
+
+  const data = patient?.data?.[activeDataKey] || {};
+  const eligibilityRule = eligibility[activeDataKey] || {};
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
+    useState(false);
+  const { showToast } = useToast();
+
+  const onRun = () => {
+    if (eligibilityRule?.isDraft) {
+      showToast("This is draft patient, please input full data", "error");
+    }
+    console.log(">>>>>>>>>>");
+  };
+
+  const handleCreate = async (patientData: any) => {
+    const jurisdiction = patientData.jurisdiction;
+    delete patientData.jurisdiction;
+    const newPatient: any = {
+      jurisdiction,
+      data: {
+        ...patient.data,
+        [activeDataKey]: patientData,
+      },
+      eligibility: {
+        ...patient.eligibility,
+        isDraft: false,
+      },
+    };
+
+    const result = await updatePatient(patient.patient_id, newPatient);
+    if (result) {
+      updateActivePatient(result);
+      showToast("Patient is updated", "success");
+    }
+  };
+
+  const initForm: any = {};
+  const flattenData = flattenObj(data);
+  const keys = Object.keys(flattenData || {});
+  keys.forEach((k) => {
+    const varK = variables.find((e: any) => e.id === k);
+    if (varK.type === "TIME_WINDOW") {
+      initForm[k] = isoToLocalInput(flattenData[k]);
+    } else {
+      if (varK.type === "BOOLEAN") {
+        const prefix = k.includes(".") ? k.split(".")[0] : k;
+        const count = countPrefix(keys, `${prefix}.`);
+        if (count > 1) {
+          if (!initForm[prefix]) initForm[prefix] = [];
+          if (flattenData[k]) {
+            initForm[prefix].push(varK.name);
+          }
+        } else {
+          initForm[k] = flattenData[k];
+        }
+      } else {
+        initForm[k] = flattenData[k];
+      }
+    }
+  });
+  initForm.jurisdiction = jurisdiction;
+
   return (
     <div>
-      <div>
+      <CreatePatientDialog
+        isOpen={isCreatePatientModalOpen}
+        onClose={() => {
+          setIsCreatePatientModalOpen(false);
+        }}
+        onCreatePatient={handleCreate}
+        initForm={initForm}
+      />
+
+      <div className="flex justify-between">
         <Breadcrumb items={items} />
+
+        <button
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          onClick={() => {
+            onRun();
+          }}
+        >
+          Run Eligibility
+        </button>
       </div>
       <div className="flex justify-between items-start mb-4 mt-4">
         <div className="text-lg font-semibold text-gray-900">
-          #{patient.id}
-          <span className="text-xs"> v2.4</span>
+          {patient?.patient_id}
+          <span className="text-xs">
+            {" "}
+            {rule?.trial?.id} - {rule?.trial?.version}
+          </span>
         </div>
       </div>
       <div className="bg-white shadow rounded-lg p-5">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start border-b-1 border-solid pb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Details</h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -79,57 +183,13 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
         <div className="mt-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left column */}
-            <div className="space-y-4 grid grid-cols-2 xs:grid-cols-1 gap-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    Demographics:
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Age: {patient.age} | Sex: {patient.sex}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    CAP Features:
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {patient.capFeatures.join(", ")}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    Contraindications:
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {patient.contraindications.join(", ")}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    ICU Timings:
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {patient.icuTimings.join(", ")}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    Consent:
-                  </h3>
-                  <p className="text-sm text-gray-600">{patient.consent}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                    Clinical State:
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {patient.clinicalState.join(", ")}
-                  </p>
-                </div>
-              </div>
+            <div className="border-r-1 border-solid flex justify-between items-start">
+              <PatientInfo patientData={data} variables={variablesPatient} />
+              <EditButton
+                onClick={() => {
+                  setIsCreatePatientModalOpen(true);
+                }}
+              />
             </div>
 
             {/* Right column */}
@@ -141,33 +201,14 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
                 <span className="text-sm font-medium text-gray-700">
                   Status:
                 </span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2 ${
-                    patient.eligibility.status === "Eligible"
-                      ? "bg-green-500 text-white"
-                      : patient.eligibility.status === "Ineligible"
-                      ? "bg-red-500 text-white"
-                      : "bg-gray-500 text-white"
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      patient.eligibility.status === "Eligible"
-                        ? "bg-white"
-                        : patient.eligibility.status === "Ineligible"
-                        ? "bg-white"
-                        : "bg-white"
-                    }`}
-                  />
-                  {patient.eligibility.status}
-                </span>
+                <StatusTag value={eligibilityRule?.status || "Pending"} />
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-700">
                   Date Screened:
                 </span>
                 <span className="text-sm text-gray-600 ml-2">
-                  {patient.eligibility.dateScreened}
+                  {eligibilityRule?.dateScreened}
                 </span>
               </div>
               <div>
@@ -175,7 +216,7 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
                   Reason:
                 </span>
                 <p className="text-sm text-gray-600 mt-1">
-                  {patient.eligibility.reason}
+                  {eligibilityRule?.reason}
                 </p>
               </div>
             </div>
@@ -183,23 +224,23 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
         </div>
 
         {/* JSON Output Section */}
-        <div className="mt-5">
+        <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-semibold text-gray-900">
               Machine-Readable JSON Output:
             </h3>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Inactive</span>
               <div className="relative inline-block w-10 h-6 bg-gray-300 rounded-full">
                 <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
               </div>
-            </div>
+            </div> */}
           </div>
           <div className="relative">
             <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-gray-500 font-mono">
-                  JSON Response
+                  Patient JSON data
                 </span>
                 <div className="flex gap-2">
                   <button className="text-gray-500 hover:text-gray-700">
@@ -238,14 +279,14 @@ export default function PatientDetailPage({ patient }: PatientDetailPageProps) {
                 </div>
               </div>
               <pre className="text-xs font-mono text-gray-700 overflow-x-auto max-h-50">
-                {JSON.stringify(patient, null, 2)}
+                {JSON.stringify(data, null, 2)}
               </pre>
               {isOpen && (
                 <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
                   <div className="bg-white rounded-lg w-11/12 max-w-3xl p-6 relative">
                     <h2 className="text-lg font-bold mb-4">Patient JSON</h2>
                     <pre className="max-h-90 overflow-auto bg-gray-100 p-4 rounded">
-                      {JSON.stringify(patient, null, 2)}
+                      {JSON.stringify(data, null, 2)}
                     </pre>
                     <button
                       onClick={() => setIsOpen(false)}

@@ -1,26 +1,20 @@
-import Link from 'next/link';
-import { Eye } from 'lucide-react';
-
-interface Patient {
-  id: string;
-  site: string;
-  date: string;
-  status: string;
-}
+import Link from "next/link";
+import { Eye } from "lucide-react";
 
 interface PatientTableProps {
-  patients: Patient[];
-  onAddPatient?: (patient: Patient) => void;
+  patients: any[];
 }
 
-export default function PatientTable({ patients }: PatientTableProps) {
+const statusStyle: any = {
+  Eligible: "bg-green-100 text-green-700 text-white",
+  Ineligible: "bg-red-100 text-red-700 text-white",
+  Pending: "bg-gray-100 text-gray-600",
+  Draft: "bg-gray-100 text-gray-600",
+  Active: "bg-purple-600 text-gray-600 text-white",
+};
 
+export default function PatientTable({ patients }: PatientTableProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const statusStyle: any = {
-    Eligible: "bg-green-100 text-green-700",
-    Ineligible: "bg-red-100 text-red-700",
-    Pending: "bg-gray-100 text-gray-600",
-  };
 
   return (
     <div className="bg-white rounded-xl shadow p-6">
@@ -42,9 +36,9 @@ export default function PatientTable({ patients }: PatientTableProps) {
         <thead>
           <tr className="text-gray-500">
             <th className="py-3">Patient ID</th>
-            {/* <th className="py-3">Site</th> */}
+            <th className="py-3">Site</th>
             <th className="py-3">Date Screened</th>
-            <th className="py-3">Eligibility Status</th>
+            <th className="py-3">Status</th>
             <th className="py-3">Actions</th>
           </tr>
         </thead>
@@ -52,21 +46,23 @@ export default function PatientTable({ patients }: PatientTableProps) {
           {patients.map((p, i) => (
             <tr key={i} className="border-t">
               <td className="py-3">{p.id}</td>
-              {/* <td className="py-3">
+              <td className="py-3">
                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700">
                   {p.site}
                 </span>
-              </td> */}
+              </td>
               <td className="py-3">{p.date}</td>
               <td className="py-3">
                 <span
-                  className={`px-3 py-1 rounded-full ${statusStyle[p.status]}`}
+                  className={`px-3 py-1 rounded-full ${
+                    statusStyle[p?.eligibility?.isDraft ? "Draft" : "Active"]
+                  }`}
                 >
-                  {p.status}
+                  {p?.eligibility?.isDraft ? "Draft" : "Active"}
                 </span>
               </td>
               <td className="py-3">
-                <Link href={`/patient/${p.id.replace('#', '')}`}>
+                <Link href={`/patient/${p.id.replace("#", "")}`}>
                   <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
                     <Eye className="w-4 h-4" />
                   </button>

@@ -1,49 +1,38 @@
+import { API_CALL_URL } from "@/constants";
 import { NextResponse } from "next/server";
 
-// mock data
-const mockPatients = {
-  "123A": {
-    id: "123A",
-    age: 21,
-    sex: "Female",
-    capFeatures: ["Infiltrate", "Fever", "Cough", "Dyspnoea"],
-    contraindications: ["Pregnancy", "Allergies"],
-    icuTimings: ["Admit", "Organ Start"],
-    consent: "Obtained",
-    clinicalState: ["Vasopressors", "PaO/Fio"],
-    eligibility: {
-      status: "Eligible" as const,
-      dateScreened: "00/00/0000",
-      reason: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    },
-  },
-  "123B": {
-    id: "123B",
-    age: 30,
-    sex: "Male",
-    capFeatures: ["Fever", "Cough"],
-    contraindications: ["None"],
-    icuTimings: ["Admit"],
-    consent: "Pending",
-    clinicalState: ["Stable"],
-    eligibility: {
-      status: "Pending" as const,
-      dateScreened: "01/01/2025",
-      reason: "Awaiting lab results.",
-    },
-  },
-};
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string; }>; }
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const patient = mockPatients[id as keyof typeof mockPatients];
+  try {
+    const { id } = await params;
+    const safeId = encodeURIComponent(id); 
+    const body = await req.json();
+    const api = `${API_CALL_URL}/patient/${safeId}`;
+    const res = await fetch(api, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (!patient) {
-    return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+    if (!res.ok) {
+      const errorText = await res.text();
+      return NextResponse.json(
+        { error: "Failed to save patient", details: errorText },
+        { status: res.status }
+      );
+    }
+
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error("PUT /patients error:", err);
+    return NextResponse.json(
+      { error: "Failed to update patient", details: err.message },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(patient);
 }

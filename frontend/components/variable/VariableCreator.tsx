@@ -112,7 +112,7 @@ export default function VariableCreator() {
                   className="mt-1 block w-full border-gray-300 shadow-sm"
                 >
                   <option value="BOOLEAN">BOOLEAN</option>
-                  <option value="WINDOW_TIME">WINDOW_TIME</option>
+                  <option value="TIME_WINDOW">TIME_WINDOW</option>
                   <option value="NUMBER">NUMBER</option>
                   <option value="DATA">DATA</option>
                   {/* <option value="CODES">CODES</option> */}

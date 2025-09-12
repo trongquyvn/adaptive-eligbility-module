@@ -225,8 +225,7 @@ export default function NodePopup({
             </>
           ) : (
             <>
-              <h2 className="text-xl font-bold mb-4">Node: {nodeData.name} </h2>
-
+              <h2 className="text-xl font-bold mb-2">{nodeData.name} </h2>
               {nodeData ? (
                 <div className="space-y-4">
                   {/* Node info */}
@@ -250,7 +249,7 @@ export default function NodePopup({
                       <p>
                         <span className="font-medium">On Pass:</span>{" "}
                         {flowStep?.on_pass?.next
-                          ? `Next → ${flowStep.on_pass.next}`
+                          ? `Next → ${nodes?.[flowStep.on_pass.next]?.name}`
                           : flowStep?.on_pass?.outcome
                           ? `Outcome → ${flowStep.on_pass.outcome}`
                           : "(none)"}
@@ -262,7 +261,7 @@ export default function NodePopup({
                       <p>
                         <span className="font-medium">On Fail:</span>{" "}
                         {flowStep?.on_fail?.next
-                          ? `Next → ${flowStep.on_fail.next}`
+                          ? `Next → ${nodes?.[flowStep.on_fail.next]?.name}`
                           : flowStep?.on_fail?.outcome
                           ? `Outcome → ${flowStep.on_fail.outcome}`
                           : "(none)"}

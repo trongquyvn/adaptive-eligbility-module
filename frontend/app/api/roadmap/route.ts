@@ -25,9 +25,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     body.logic = {
       flow: [],
-      nodes: {},
-    }
-    console.log('body: ', body);
+      nodes: {
+        database_checking: {
+          name: "Are they already in the database?",
+          cate: "1",
+          type: "DATABASE",
+          input: { var: "database" },
+          reason_on_fail: "Patient has not in database",
+        },
+      },
+    };
     const api = `${API_CALL_URL}/rules`;
     const res = await fetch(api, {
       method: "POST",

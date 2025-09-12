@@ -19,19 +19,9 @@
       "type": "BOOLEAN"
     },
     {
-      "id": "database",
-      "name": "database_checking",
-      "type": "DATABASE"
-    },
-    {
-      "id": "new",
-      "name": "different_patient",
-      "type": "BOOLEAN"
-    },
-    {
       "id": "support.started_time",
       "name": "randomised_since",
-      "type": "TIME"
+      "type": "TIME_WINDOW"
     },
     {
       "id": "cap.fever",

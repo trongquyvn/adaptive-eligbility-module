@@ -74,13 +74,14 @@ export default function RoadmapPage() {
           <span className="text-xs"> v2.4</span>
         </h2>
 
-        {activeTab === "overview" && (
+        {/* {activeTab === "overview" && (
           <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
             Validate
           </button>
-        )}
+        )} */}
 
-        {(activeTab === "id-check" ||
+        {(activeTab === "overview" ||
+          activeTab === "id-check" ||
           activeTab === "platform" ||
           activeTab === "consent") && (
           <div style={{ height: "40px" }}>&nbsp;</div>

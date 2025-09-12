@@ -1,69 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Modal from "../common/Modal";
 import TagInput from "../common/TagInput";
 import SingleTagSelect from "../common/SingleTagSelect";
-
-interface Patient {
-  id: string;
-  age: string;
-  sex: string;
-  site: string;
-  date: string;
-  status: string;
-  reason: string;
-}
+import { collectInputVars, objExpandKeys } from "@/lib/common";
+import { usePatients } from "@/context/PatientContext";
+import {
+  // Calendar,
+  CheckCircle,
+  Hash,
+  FileText,
+  Tags,
+} from "lucide-react";
 
 interface CreatePatientDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreatePatient: (patient: Omit<Patient, "id">) => void;
+  onCreatePatient: (data: Record<string, any>, a: boolean) => void;
+  initForm?: Record<string, any>;
 }
 
 export default function CreatePatientDialog({
   isOpen,
   onClose,
   onCreatePatient,
+  initForm = {}, // default {}
 }: CreatePatientDialogProps) {
-  const [formData, setFormData] = useState({
-    createdId: "#1234",
-    age: "",
-    sex: "",
-    capFeatures: [] as string[],
-    contraindications: [] as string[],
-    icuTimings: [] as string[],
-    consent: "",
-    clinicalState: [] as string[],
-    site: "",
-    dateScreened: "",
-    eligibilityStatus: "",
-    reason: "",
-  });
+  const { rule } = usePatients();
+  const varDefs = rule.variables;
+  const inputVars = collectInputVars(rule);
+
+  // Group variables by prefix (e.g., feat.fever and feat.registry → feat)
+  const groups = useMemo(
+    () => groupVariablesByPrefix(varDefs, inputVars),
+    [varDefs, inputVars]
+  );
+
+  // Store form state
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initForm);
+    }
+  }, [isOpen]);
 
-    onCreatePatient({
-      age: formData.age,
-      sex: formData.sex,
-      site: formData.site,
-      date: formData.dateScreened,
-      status: formData.eligibilityStatus,
-      reason: formData.reason,
+  const handleSubmit = (isDraft: boolean = false) => {
+    const form = { ...formData };
+
+    // Validate all required fields
+    const name = [];
+    if (!form["jurisdiction"]) {
+      name.push("Jurisdiction");
+    }
+
+    const keys = Object.keys(groups);
+    keys.forEach((k) => {
+      if (groups[k].length === 1) {
+        const node = groups[k][0];
+        if (!form[node.id]) {
+          name.push(node.name);
+        } else {
+          if (node.type === "TIME_WINDOW") {
+            form[node.id] = new Date(form[node.id]).toISOString();
+          }
+        }
+      } else {
+        form[k] = {};
+        groups[k].forEach((e) => {
+          if (formData?.[k]?.includes(e.name)) {
+            form[e.id] = true;
+          }
+        });
+      }
     });
 
+    if (name.length && !isDraft) {
+      alert(`Fields: ${name.join(", ")} is(are) required!`);
+      return;
+    }
+
+    const newNodeData = objExpandKeys(form);
+    onCreatePatient(newNodeData, isDraft);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="flex flex-col h-full">
-        {/* Header */}
         <div className="flex items-start gap-3 border-b pb-3">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-100">
             <span className="text-purple-600 text-xl font-bold">(x)</span>
@@ -78,182 +109,207 @@ export default function CreatePatientDialog({
           </div>
         </div>
 
-        {/* Body (scrollable if needed) */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Created ID */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Created ID
-              </label>
-              <input
-                type="text"
-                value={formData.createdId}
-                disabled
-                className="w-full px-3 py-2 border rounded-md bg-gray-100 text-gray-600"
-              />
-            </div>
-
-            {/* Age */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Age *</label>
-              <input
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleChange("age", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="Enter age"
-              />
-            </div>
-
-            {/* Sex */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Sex *</label>
-              <select
-                value={formData.sex}
-                onChange={(e) => handleChange("sex", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="">Select sex</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-            </div>
-
-            {/* CAP Features */}
-            <TagInput
-              label="CAP Features"
-              value={formData.capFeatures}
-              onChange={(val) => handleChange("capFeatures", val)}
-              required
-              options={[
-                "Cough",
-                "Fever",
-                "Shortness of breath",
-                "Chest pain",
-                "Sputum production",
-              ]}
-              color="blue"
+        <div className="space-y-4 overflow-y-auto mt-4">
+          <div className="">
+            <SingleTagSelect
+              label="Jurisdiction"
+              value={formData["jurisdiction"] || []}
+              onChange={(val) => handleChange("jurisdiction", val)}
+              options={rule?.trial?.jurisdiction.map((e: any) => {
+                return {
+                  label: e,
+                  value: e,
+                  color: "green",
+                };
+              })}
+              placeholder="Select jurisdiction"
             />
+          </div>
 
-            {/* Contraindications */}
-            <TagInput
-              label="Contraindications"
-              value={formData.contraindications}
-              onChange={(val) => handleChange("contraindications", val)}
-              required
-              color="red"
-            />
+          {Object.entries(groups).map(([prefix, defs]) => {
+            // If multiple vars share the same prefix → TagInput with icon
+            if (defs.length > 1) {
+              return (
+                <div key={prefix}>
+                  <label className="block text-sm font-medium mb-1">
+                    {prefix} *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                      <Tags className="w-5 h-5" />
+                    </span>
+                    <div className="pl-8">
+                      <TagInput
+                        label=""
+                        value={formData[prefix] || []}
+                        onChange={(val) => handleChange(prefix, val)}
+                        options={defs.map((d) => d.name)}
+                        color="blue"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
-            {/* ICU Timings */}
-            <TagInput
-              label="ICU Timings"
-              value={formData.icuTimings}
-              onChange={(val) => handleChange("icuTimings", val)}
-              required
-              color="green"
-            />
+            // Single variable → render based on type
+            const def = defs[0];
+            const val = formData[def.id] ?? "";
 
-            {/* Consent */}
-            <div>
-              <SingleTagSelect
-                label="Consent"
-                value={formData.consent}
-                onChange={(val) => handleChange("consent", val)}
-                required
-                options={[
-                  { label: "Obtained", value: "Obtained", color: "blue" },
-                  {
-                    label: "Not obtained",
-                    value: "Not obtained",
-                    color: "red",
-                  },
-                ]}
-              />
-            </div>
+            switch (def.type) {
+              case "BOOLEAN":
+                return (
+                  <div key={def.id}>
+                    <label className="block text-sm font-medium mb-1">
+                      {def.name} *
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={def.id}
+                          value="true"
+                          checked={val === "true"}
+                          onChange={(e) => handleChange(def.id, e.target.value)}
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name={def.id}
+                          value="false"
+                          checked={val === "false"}
+                          onChange={(e) => handleChange(def.id, e.target.value)}
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                );
 
-            {/* Clinical State */}
-            <TagInput
-              label="Clinical State"
-              value={formData.clinicalState}
-              onChange={(val) => handleChange("clinicalState", val)}
-              required
-              color="green"
-            />
+              case "TIME_WINDOW":
+                return (
+                  <div key={def.id}>
+                    <label className="block text-sm font-medium mb-1">
+                      {def.name} *
+                    </label>
+                    <div className="">
+                      <input
+                        type="datetime-local"
+                        value={val}
+                        onChange={(e) => handleChange(def.id, e.target.value)}
+                        className="w-full pl-2 pr-3 py-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+                );
 
-            {/* Site */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Site *</label>
-              <select
-                value={formData.site}
-                onChange={(e) => handleChange("site", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="">Select Site</option>
-                <option value="Site A">Site A</option>
-                <option value="Site B">Site B</option>
-              </select>
-            </div>
+              case "NUMBER":
+                return (
+                  <div key={def.id}>
+                    <label className="block text-sm font-medium mb-1">
+                      {def.name} *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                        <Hash className="w-5 h-5" />
+                      </span>
+                      <input
+                        type="number"
+                        value={val}
+                        onChange={(e) => handleChange(def.id, e.target.value)}
+                        className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+                );
 
-            {/* Date screened */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Date screened *
-              </label>
-              <input
-                type="date"
-                value={formData.dateScreened}
-                onChange={(e) => handleChange("dateScreened", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
+              case "DATA":
+              default:
+                return (
+                  <div key={def.id}>
+                    <label className="block text-sm font-medium mb-1">
+                      {def.name} *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                        <FileText className="w-5 h-5" />
+                      </span>
+                      <input
+                        type="text"
+                        value={val}
+                        onChange={(e) => handleChange(def.id, e.target.value)}
+                        className="w-full pl-10 pr-3 py-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+                );
+            }
+          })}
 
-            {/* Eligibility Status */}
-            <div>
-              <SingleTagSelect
-                label="Eligibility Status"
-                value={formData.eligibilityStatus}
-                onChange={(val) => handleChange("eligibilityStatus", val)}
-                required
-                options={[
-                  { label: "Eligible", value: "Eligible", color: "green" },
-                  { label: "Ineligible", value: "Ineligible", color: "red" },
-                  { label: "Pending", value: "Pending", color: "gray" },
-                ]}
-              />
-            </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
 
-            {/* Reason */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Reason *</label>
-              <textarea
-                value={formData.reason}
-                onChange={(e) => handleChange("reason", e.target.value)}
-                placeholder="What has been decided?"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-          </form>
-        </div>
+            {!Object.keys(initForm).length ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSubmit(true);
+                  }}
+                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                >
+                  Save draft
+                </button>
 
-        {/* Footer (fixed at bottom) */}
-        <div className="flex justify-end gap-3 border-t pt-4 pb-4 sticky bottom-0 bg-white">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="createPatientForm"
-            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-          >
-            Create Patient
-          </button>
+                <button
+                  onClick={() => {
+                    handleSubmit(false);
+                  }}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                >
+                  Create Patient
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    handleSubmit(false);
+                  }}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                >
+                  Update Patient
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </Modal>
   );
+}
+
+function groupVariablesByPrefix(varDefs: any[], inputVars: string[]) {
+  const groups: Record<string, any[]> = {};
+  inputVars.forEach((id) => {
+    const def = varDefs.find((d) => d.id === id);
+    if (!def) return;
+    if (def.type === "BOOLEAN") {
+      const prefix = id.includes(".") ? id.split(".")[0] : id;
+      if (!groups[prefix]) groups[prefix] = [];
+      groups[prefix].push(def);
+    } else {
+      groups[def.id] = [def];
+    }
+  });
+  return groups;
 }

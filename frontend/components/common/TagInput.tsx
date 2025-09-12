@@ -65,9 +65,11 @@ export default function TagInput({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-medium mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+      {!!label && (
+        <label className="block text-sm font-medium mb-1">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
 
       {/* Input box chứa tags */}
       <div className="flex flex-wrap items-center gap-2 w-full px-2 py-1 border rounded-md focus-within:ring-1 focus-within:ring-purple-500">
