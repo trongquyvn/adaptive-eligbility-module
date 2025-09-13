@@ -69,9 +69,9 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
     if (left === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
-    const right = node.right.const;
+    const right = parseFloat(node.right.const);
     let result = false;
-    switch (node.operator) {
+    switch (node.operator.trim()) {
       case "<":
         result = left < right;
         break;
