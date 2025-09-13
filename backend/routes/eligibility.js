@@ -90,9 +90,15 @@ router.get("/logs", async (req, res) => {
 });
 
 // ✅ API: Get logs by patientId
-router.get("/logs/:patientId", async (req, res) => {
-  const { patientId } = req.params;
-  const logs = await EvaluationLog.find({ patient_id: patientId }).sort({ timestamp: -1 });
+router.get("/logs/:patientId/:rule_id/:rule_version", async (req, res) => {
+  const { patientId, rule_id, rule_version } = req.params;
+  const logs = await EvaluationLog.find({
+    patient_id: patientId,
+    rule_id,
+    rule_version,
+  }).sort({
+    timestamp: -1,
+  });
   res.json(logs);
 });
 

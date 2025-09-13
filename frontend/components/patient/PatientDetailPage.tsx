@@ -172,6 +172,7 @@ export default function PatientDetailPage({ patient }: any) {
   return (
     <div>
       <PatientLogModal
+        rule={rule}
         patientId={patient_id}
         open={openLog}
         onClose={() => setOpenLog(false)}

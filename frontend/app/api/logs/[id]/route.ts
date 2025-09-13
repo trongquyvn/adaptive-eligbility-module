@@ -1,14 +1,16 @@
 import { API_CALL_URL } from "@/constants";
 import { NextResponse } from "next/server";
 
-export async function GET(
+export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const body = await req.json();
+    const { ruleId, version } = body;
     const safeId = encodeURIComponent(id);
-    const api = `${API_CALL_URL}/eligibility/logs/${safeId}`;
+    const api = `${API_CALL_URL}/eligibility/logs/${safeId}/${ruleId}/${version}/`;
     const res = await fetch(api, {
       method: "GET",
       headers: {

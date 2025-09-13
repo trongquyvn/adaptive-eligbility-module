@@ -3,24 +3,32 @@
 import { getPatientLog } from "@/lib/patient";
 import { useEffect, useState } from "react";
 interface Props {
+  rule: any;
   patientId: string;
   open: boolean;
   onClose: () => void;
 }
 
-export default function PatientLogModal({ patientId, open, onClose }: Props) {
+export default function PatientLogModal({
+  patientId,
+  rule,
+  open,
+  onClose,
+}: Props) {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const ruleId = rule.trial.id;
+  const version = rule.trial.version;
 
   useEffect(() => {
-    if (open && patientId) {
+    if (open && patientId && ruleId && version) {
       setLoading(true);
-      getPatientLog(patientId).then((e) => {
+      getPatientLog(patientId, ruleId, version).then((e) => {
         setLogs(e);
         setLoading(false);
       });
     }
-  }, [open, patientId]);
+  }, [open, patientId, ruleId, version]);
 
   if (!open) return null;
 

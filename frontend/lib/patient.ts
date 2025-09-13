@@ -29,13 +29,24 @@ export async function runPatientCheck(body: any) {
   return res.json();
 }
 
-export async function getPatientLog(id: any) {
+export async function getPatientLog(
+  id: string,
+  ruleId: string,
+  version: string
+) {
   const safeId = encodeURIComponent(id);
-  const res = await fetch(`${API_BASE_URL}/api/logs/${safeId}`, {
+  const safeRule = encodeURIComponent(ruleId);
+  const safeVer = encodeURIComponent(version);
+  const res = await fetch(`${API_BASE_URL}/api/logs/${safeId}/`, {
+    method: "POST",
     cache: "no-store",
     headers: {
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      ruleId: safeRule,
+      version: safeVer,
+    }),
   });
 
   if (!res.ok) throw new Error("Failed to getPatientLog");
