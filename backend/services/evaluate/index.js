@@ -22,7 +22,13 @@ function resolveVariable(varDef, patientData, nodeType) {
     case "BOOLEAN":
     case "DATABASE":
     case "NOT":
-      return { value: Boolean(rawValue), id: varDef.var };
+      let val;
+      if (typeof rawValue === "string") {
+        val = rawValue.toLowerCase() === "true";
+      } else {
+        val = Boolean(rawValue);
+      }
+      return { value: val, id: varDef.var };
 
     case "COMPARE":
       return { value: Number(rawValue), id: varDef.var };
@@ -36,12 +42,12 @@ function resolveVariable(varDef, patientData, nodeType) {
 }
 
 // ------------------ EVALUATE NODE ------------------
-function evaluateNode(node, patientData, ruleDoc, ctx) {
+function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
   if (!node) return true;
   const t = node.type;
 
   const fail = (reason) => {
-    if (reason) ctx.key_reasons.push(reason);
+    if (reason && shouldAddError) ctx.key_reasons.push(reason);
     return false;
   };
   const pending = (id) => {
@@ -90,6 +96,8 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
 
   if (t === "BOOLEAN" || t === "DATABASE") {
     const { value, id } = resolveVariable(node.input, patientData, node.type);
+    console.log("id: ", id);
+    console.log("value: ", value);
     if (value === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -210,7 +218,13 @@ function evaluateNode(node, patientData, ruleDoc, ctx) {
               ? ruleDoc.logic.nodes[constraint.exclude_if]
               : constraint.exclude_if;
 
-          const excluded = evaluateNode(excludeNode, patientData, ruleDoc, ctx);
+          const excluded = evaluateNode(
+            excludeNode,
+            patientData,
+            ruleDoc,
+            ctx,
+            false
+          );
 
           if (excluded) {
             if (constraint.reason_on_exclude) {
@@ -257,27 +271,34 @@ function evaluateByRoot(patientData, ruleDoc) {
 // ------------------ FLOW MODE ------------------
 function evaluateByFlow(patientData, ruleDoc) {
   const ctx = { key_reasons: [], data_needed: [], hasPending: false };
-
   let currentStep = ruleDoc.logic.flow[0];
   let finalOutcome = null;
   let finalCode = null;
 
+  const maxStep = ruleDoc.logic.flow.length;
+  let count = 0;
+  let cate = "1";
+  let isOnPass = true;
   while (currentStep && !finalOutcome) {
+    count++;
     const node = ruleDoc.logic.nodes[currentStep.id];
+    cate = node?.cate;
     const result = evaluateNode(node, patientData, ruleDoc, ctx);
-
     const branch = result ? currentStep.on_pass : currentStep.on_fail;
 
     if (branch) {
       if (branch.next) {
         currentStep = ruleDoc.logic.flow.find((f) => f.id === branch.next);
       } else if (branch.outcome) {
+        if (!result) isOnPass = false;
         finalOutcome = branch.outcome;
         finalCode = branch.code || null;
       } else {
+        if (!result) isOnPass = false;
         break;
       }
     } else {
+      if (!result) isOnPass = false;
       break;
     }
   }
@@ -289,6 +310,9 @@ function evaluateByFlow(patientData, ruleDoc) {
     eligible_regimens: ctx.eligible_regimens || [],
     key_reasons: ctx.key_reasons,
     data_needed: ctx.hasPending ? ctx.data_needed : [],
+    done: count === maxStep,
+    cate,
+    isOnPass,
   };
 }
 

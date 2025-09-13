@@ -157,3 +157,11 @@ export function isoToLocalInput(iso: string) {
     .toISOString()
     .slice(0, 16);
 }
+
+export const statusStyle: any = {
+  Eligible: "bg-green-700 text-green-700 text-white",
+  Ineligible: "bg-purple-700 text-purple-700 text-white",
+  Pending: "bg-purple-100 text-purple-700",
+  Draft: "bg-gray-100 text-gray-600",
+  Active: "bg-purple-600 text-gray-600 text-white",
+};

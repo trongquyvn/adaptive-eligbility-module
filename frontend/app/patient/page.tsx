@@ -30,7 +30,9 @@ export default function PatientPage() {
       id: e.patient_id,
       site: e.site || "Site A",
       date: e.createAt || "",
-      eligibility: e.eligibility,
+      eligibility: {
+        isDraft: e?.eligibility?.isDraft,
+      },
     };
   });
 
@@ -62,7 +64,6 @@ export default function PatientPage() {
       },
       eligibility: {
         isDraft,
-        status: "pending",
       },
     };
 

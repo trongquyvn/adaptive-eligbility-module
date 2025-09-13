@@ -8,7 +8,8 @@ import { useToast } from "@/context/ToastContext";
 import { Pencil } from "lucide-react";
 import CreatePatientDialog from "./CreatePatientDialog";
 import { collectInputVars, flattenObj, isoToLocalInput } from "@/lib/common";
-import { updatePatient } from "@/lib/patient";
+import { updatePatient, runPatientCheck } from "@/lib/patient";
+import PatientValidate from "./PatientValidate";
 
 function EditButton({ onClick }: { onClick: () => void }) {
   return (
@@ -19,14 +20,6 @@ function EditButton({ onClick }: { onClick: () => void }) {
     >
       <Pencil className="w-6 h-6" />
     </button>
-  );
-}
-
-function StatusTag({ value }: { value: any }) {
-  return (
-    <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-      {value}
-    </span>
   );
 }
 
@@ -52,21 +45,68 @@ export default function PatientDetailPage({ patient }: any) {
     inputVars.includes(e.id)
   );
 
-  const { eligibility = {}, jurisdiction } = patient;
-
+  const { eligibility = {}, jurisdiction, patient_id } = patient;
   const data = patient?.data?.[activeDataKey] || {};
   const eligibilityRule = eligibility[activeDataKey] || {};
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [endNum, setEndNum] = useState<number | undefined>();
+  const [isOnPass, setIsOnPass] = useState(true);
+
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
     useState(false);
   const { showToast } = useToast();
 
-  const onRun = () => {
+  const onRun = async () => {
     if (eligibilityRule?.isDraft) {
       showToast("This is draft patient, please input full data", "error");
+      return;
     }
-    console.log(">>>>>>>>>>");
+
+    setIsRunning(true);
+    setEndNum(undefined);
+    setIsOnPass(true);
+
+    let num = undefined;
+    let isOnPass = true;
+    const runData = {
+      trial_id: rule.trial.id,
+      trial_version: rule.trial.version,
+      jurisdiction,
+      patient_id,
+      data,
+    };
+    const result = await runPatientCheck(runData);
+
+    if (result) {
+      isOnPass = result?.isOnPass;
+      num = parseInt(result?.cate);
+
+      const newPatient: any = {
+        ...patient,
+        eligibility: {
+          ...patient.eligibility,
+          [activeDataKey]: {
+            ...result,
+          },
+        },
+      };
+
+      const resultPatient = await updatePatient(patient.patient_id, newPatient);
+      if (resultPatient) {
+        updateActivePatient(resultPatient);
+      }
+    }
+
+    setIsOnPass(isOnPass);
+    setEndNum(num);
+    setTimeout(
+      () => {
+        setIsRunning(false);
+      },
+      num ? num * 500 : 500
+    );
   };
 
   const handleCreate = async (patientData: any) => {
@@ -130,15 +170,16 @@ export default function PatientDetailPage({ patient }: any) {
 
       <div className="flex justify-between">
         <Breadcrumb items={items} />
-
-        <button
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          onClick={() => {
-            onRun();
-          }}
-        >
-          Run Eligibility
-        </button>
+        {!isRunning && (
+          <button
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            onClick={() => {
+              onRun();
+            }}
+          >
+            Run Eligibility
+          </button>
+        )}
       </div>
       <div className="flex justify-between items-start mb-4 mt-4">
         <div className="text-lg font-semibold text-gray-900">
@@ -183,7 +224,7 @@ export default function PatientDetailPage({ patient }: any) {
         <div className="mt-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left column */}
-            <div className="border-r-1 border-solid flex justify-between items-start">
+            <div className="border-r-1 border-solid flex justify-between items-start pr-2">
               <PatientInfo patientData={data} variables={variablesPatient} />
               <EditButton
                 onClick={() => {
@@ -194,35 +235,12 @@ export default function PatientDetailPage({ patient }: any) {
 
             {/* Right column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                Eligibility Result
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Status:
-                </span>
-                <StatusTag value={eligibilityRule?.status || "Pending"} />
-              </div>
-              {eligibilityRule && eligibilityRule?.status !== "Pending" && (
-                <>
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Date Screened:
-                    </span>
-                    <span className="text-sm text-gray-600 ml-2">
-                      {eligibilityRule?.dateScreened}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Reason:
-                    </span>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {eligibilityRule?.reason}
-                    </p>
-                  </div>
-                </>
-              )}
+              <PatientValidate
+                patient={patient}
+                isRunning={isRunning}
+                endNum={endNum}
+                isOnPass={isOnPass}
+              />
             </div>
           </div>
         </div>

@@ -238,6 +238,22 @@ export default function NodePopup({
                       {nodeData.type}
                     </p>
                     <p>
+                      <span className="font-semibold">Var:</span>{" "}
+                      {nodeData?.input?.var}
+                    </p>
+                    {nodeData.type === "COMPARE" && (
+                      <>
+                        <p>
+                          <span className="font-semibold">Operator:</span>{" "}
+                          {nodeData?.operator}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Var:</span>{" "}
+                          {nodeData?.right?.const}
+                        </p>
+                      </>
+                    )}
+                    <p>
                       <span className="font-semibold">Cate:</span>{" "}
                       {nodeData.cate}
                     </p>
