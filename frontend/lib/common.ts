@@ -158,6 +158,23 @@ export function isoToLocalInput(iso: string) {
     .slice(0, 16);
 }
 
+export function formatISODate(isoString: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  const day = pad(date.getDate());
+  const month = pad(date.getMonth() + 1); // tháng bắt đầu từ 0
+  const year = date.getFullYear();
+
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+
+  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
 export const statusStyle: any = {
   Eligible: "bg-green-700 text-green-700 text-white",
   Ineligible: "bg-purple-700 text-purple-700 text-white",

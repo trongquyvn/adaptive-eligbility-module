@@ -38,6 +38,6 @@ export async function getPatientLog(id: any) {
     },
   });
 
-  if (!res.ok) throw new Error("Failed to eligibility");
+  if (!res.ok) throw new Error("Failed to getPatientLog");
   return res.json();
 }

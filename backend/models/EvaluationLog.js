@@ -13,6 +13,7 @@ const EvaluationLogSchema = new mongoose.Schema({
   rule_version: { type: String, default: "v1.0" },
   patientData: mongoose.Schema.Types.Mixed,
   rule: mongoose.Schema.Types.Mixed,
+  isOnPass: { type: Boolean, default: false },
   timestamp: { type: Date, default: Date.now },
 });
 

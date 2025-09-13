@@ -7,10 +7,15 @@ import PatientInfo from "./PatientInfo";
 import { useToast } from "@/context/ToastContext";
 import { Pencil } from "lucide-react";
 import CreatePatientDialog from "./CreatePatientDialog";
-import { collectInputVars, flattenObj, isoToLocalInput } from "@/lib/common";
+import {
+  collectInputVars,
+  flattenObj,
+  formatISODate,
+  isoToLocalInput,
+} from "@/lib/common";
 import { updatePatient, runPatientCheck } from "@/lib/patient";
 import PatientValidate from "./PatientValidate";
-import Link from "next/link";
+import PatientLogModal from "./PatientLogModal";
 
 function EditButton({ onClick }: { onClick: () => void }) {
   return (
@@ -48,12 +53,17 @@ export default function PatientDetailPage({ patient }: any) {
 
   const { eligibility = {}, jurisdiction, patient_id } = patient;
   const data = patient?.data?.[activeDataKey] || {};
-  const eligibilityRule = eligibility[activeDataKey] || {};
+  const eligibilityRule = {
+    ...(eligibility[activeDataKey] || {}),
+    evaluated_at: formatISODate(eligibility?.[activeDataKey]?.evaluated_at),
+  };
 
   const [isOpen, setIsOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [endNum, setEndNum] = useState<number | undefined>();
   const [isOnPass, setIsOnPass] = useState(true);
+
+  const [openLog, setOpenLog] = useState(false);
 
   const [isCreatePatientModalOpen, setIsCreatePatientModalOpen] =
     useState(false);
@@ -161,6 +171,12 @@ export default function PatientDetailPage({ patient }: any) {
 
   return (
     <div>
+      <PatientLogModal
+        patientId={patient_id}
+        open={openLog}
+        onClose={() => setOpenLog(false)}
+      />
+
       <CreatePatientDialog
         isOpen={isCreatePatientModalOpen}
         onClose={() => {
@@ -201,9 +217,11 @@ export default function PatientDetailPage({ patient }: any) {
               Patient information and eligibility results
             </p>
           </div>
-          <Link
-            href={`/patient/logs/${patient_id}`}
-            className="text-sm text-purple-600 hover:underline flex items-center gap-2"
+          <a
+            className="text-sm text-purple-600 hover:underline flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              setOpenLog(true);
+            }}
           >
             <svg
               className="w-4 h-4"
@@ -219,7 +237,7 @@ export default function PatientDetailPage({ patient }: any) {
               />
             </svg>
             History Log
-          </Link>
+          </a>
         </div>
 
         {/* Patient Details Card */}
@@ -263,9 +281,7 @@ export default function PatientDetailPage({ patient }: any) {
           <div className="relative">
             <div className="bg-gray-100 rounded-lg p-4">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-500 font-mono">
-                  Patient JSON data
-                </span>
+                <span className="text-xs text-gray-500 font-mono"></span>
                 <div className="flex gap-2">
                   <button className="text-gray-500 hover:text-gray-700">
                     <svg
@@ -303,14 +319,16 @@ export default function PatientDetailPage({ patient }: any) {
                 </div>
               </div>
               <pre className="text-xs font-mono text-gray-700 overflow-x-auto max-h-50">
-                {JSON.stringify(data, null, 2)}
+                {JSON.stringify(eligibilityRule, null, 2)}
               </pre>
               {isOpen && (
                 <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
                   <div className="bg-white rounded-lg w-11/12 max-w-3xl p-6 relative">
-                    <h2 className="text-lg font-bold mb-4">Patient JSON</h2>
+                    <h2 className="text-lg font-bold mb-4">
+                      Machine-Readable JSON Output
+                    </h2>
                     <pre className="max-h-90 overflow-auto bg-gray-100 p-4 rounded">
-                      {JSON.stringify(data, null, 2)}
+                      {JSON.stringify(eligibilityRule, null, 2)}
                     </pre>
                     <button
                       onClick={() => setIsOpen(false)}

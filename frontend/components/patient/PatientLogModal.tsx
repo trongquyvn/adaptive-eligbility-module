@@ -1,24 +1,7 @@
 "use client";
 
+import { getPatientLog } from "@/lib/patient";
 import { useEffect, useState } from "react";
-
-interface EvaluationLog {
-  _id: string;
-  patient_id: string;
-  evaluated_at: string;
-  registry_code?: string;
-  status: string;
-  key_reasons: string[];
-  eligible_domains: string[];
-  eligible_regimens: string[];
-  data_needed: string[];
-  rule_id: string;
-  rule_version: string;
-  patientData: any;
-  rule: any;
-  timestamp: string;
-}
-
 interface Props {
   patientId: string;
   open: boolean;
@@ -26,18 +9,24 @@ interface Props {
 }
 
 export default function PatientLogModal({ patientId, open, onClose }: Props) {
-  const [logs, setLogs] = useState<EvaluationLog[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    
+    if (open && patientId) {
+      setLoading(true);
+      getPatientLog(patientId).then((e) => {
+        setLogs(e);
+        setLoading(false);
+      });
+    }
   }, [open, patientId]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-[800px] max-h-[90vh] overflow-y-auto p-6">
+      <div className="bg-white rounded-lg shadow-lg w-[800px] min-h-[70vh]  max-h-[90vh] overflow-y-auto p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">Logs for Patient: {patientId}</h2>
           <button
@@ -58,7 +47,7 @@ export default function PatientLogModal({ patientId, open, onClose }: Props) {
           {logs.map((log) => (
             <div
               key={log._id}
-              className="border rounded-md p-4 bg-gray-50 shadow-sm"
+              className="border rounded-md p-4 bg-gray-50 shadow-sm max-h-[400px] overflow-y-auto"
             >
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <span>
@@ -69,10 +58,8 @@ export default function PatientLogModal({ patientId, open, onClose }: Props) {
                   Status:{" "}
                   <span
                     className={
-                      log.status === "Eligible"
+                      log.isOnPass
                         ? "text-green-600 font-medium"
-                        : log.status === "Pending"
-                        ? "text-yellow-600 font-medium"
                         : "text-red-600 font-medium"
                     }
                   >
@@ -82,7 +69,7 @@ export default function PatientLogModal({ patientId, open, onClose }: Props) {
               </div>
 
               <p>
-                <strong>Registry Code:</strong> {log.registry_code || "-"}
+                <strong>Registry Code:</strong> {log.registry_code || ""}
               </p>
               <p>
                 <strong>Rule:</strong> {log.rule_id} ({log.rule_version})
@@ -91,7 +78,7 @@ export default function PatientLogModal({ patientId, open, onClose }: Props) {
               <div className="mt-2">
                 <strong>Key Reasons:</strong>
                 <ul className="list-disc list-inside text-sm text-gray-700">
-                  {log.key_reasons?.map((r, idx) => (
+                  {log.key_reasons?.map((r: any, idx: number) => (
                     <li key={idx}>{r}</li>
                   ))}
                 </ul>
@@ -120,6 +107,15 @@ export default function PatientLogModal({ patientId, open, onClose }: Props) {
                 </summary>
                 <pre className="bg-white border p-2 text-xs overflow-x-auto">
                   {JSON.stringify(log.patientData, null, 2)}
+                </pre>
+              </details>
+
+              <details className="mt-2">
+                <summary className="cursor-pointer text-blue-600">
+                  Rule Data
+                </summary>
+                <pre className="bg-white border p-2 text-xs overflow-x-auto">
+                  {JSON.stringify(log.rule, null, 2)}
                 </pre>
               </details>
             </div>

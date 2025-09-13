@@ -1,7 +1,7 @@
 "use client";
 
 import { usePatients } from "@/context/PatientContext";
-import { isoToLocalInput, statusStyle } from "@/lib/common";
+import { formatISODate, statusStyle } from "@/lib/common";
 import { useEffect, useState } from "react";
 
 const steps = ["ID Check", "Platform", "Domain", "Regimen", "Consent"];
@@ -117,7 +117,7 @@ export default function PatientValidate({
                   Date Screened:
                 </span>
                 <span className="text-sm text-gray-600 ml-2">
-                  {isoToLocalInput(eligibilityRule?.evaluated_at)}
+                  {formatISODate(eligibilityRule?.evaluated_at)}
                 </span>
               </div>
               {!!(

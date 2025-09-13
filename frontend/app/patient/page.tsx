@@ -29,7 +29,7 @@ export default function PatientPage() {
     return {
       id: e.patient_id,
       site: e.site || "Site A",
-      date: e.createAt || "",
+      date: e.createdAt || "",
       eligibility: {
         isDraft: e?.eligibility?.isDraft,
       },

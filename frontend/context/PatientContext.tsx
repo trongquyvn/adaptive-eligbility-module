@@ -5,6 +5,7 @@ import {
   Dispatch,
   SetStateAction,
   useContext,
+  useEffect,
   useState,
 } from "react";
 
@@ -49,10 +50,25 @@ export function PatientProvider({
 }) {
   const [listPatients, setListPatients] = useState(patients);
   const [listRules, setListRules] = useState(rules);
-  const [activeRule, setActiveRule] = useState(0);
+
+  const [activeRule, setActiveRule] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("activeRule");
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+
   const [ruleUpdate, setRuleUpdate] = useState(0);
   const rule = listRules[activeRule] || {};
   const activeDataKey = rule?.trial?.id + "_" + rule?.trial?.version;
+
+  useEffect(() => {
+    if (activeRule >= listRules.length) {
+      setActiveRule(0);
+      localStorage.setItem("activeRule", "0");
+    }
+  }, [activeRule, listRules]);
 
   const updateActiveRule = (rule: Record<string, any>) => {
     const newList = listRules.map((e) => (e._id === rule._id ? rule : e));

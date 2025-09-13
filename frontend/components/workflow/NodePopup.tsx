@@ -47,10 +47,23 @@ export default function NodePopup({
       const flowStep = rule?.logic?.flow?.find((f: any) => f.start) || {};
       setOnStartCode(flowStep.id);
     } else {
+      console.log("flowStep: ", flowStep);
+
       setOnPassNext(flowStep?.on_pass?.next || "");
+      if (flowStep?.on_pass?.next) {
+        setPassType("next");
+      } else {
+        setPassType("outcome");
+      }
       setOnPassOutcome(flowStep?.on_pass?.outcome || "");
       setOnPassCode(flowStep?.on_pass?.code || "");
+
       setOnFailNext(flowStep?.on_fail?.next || "");
+      if (flowStep?.on_fail?.next) {
+        setFailType("next");
+      } else {
+        setFailType("outcome");
+      }
       setOnFailOutcome(flowStep?.on_fail?.outcome || "");
       setOnFailCode(flowStep?.on_fail?.code || "");
     }
@@ -253,10 +266,18 @@ export default function NodePopup({
                         </p>
                       </>
                     )}
-                    <p>
-                      <span className="font-semibold">Cate:</span>{" "}
-                      {nodeData.cate}
-                    </p>
+                    {nodeData.type === "TIME_WINDOW" && (
+                      <>
+                        <p>
+                          <span className="font-semibold">Max hours:</span>{" "}
+                          {nodeData?.window.max_hours_since}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Min hours:</span>{" "}
+                          {nodeData?.window.min_hours_since}
+                        </p>
+                      </>
+                    )}
                   </div>
 
                   {!editMode ? (

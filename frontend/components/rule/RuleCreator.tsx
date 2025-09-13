@@ -47,7 +47,6 @@ export default function RuleCreator({
 
   const [form, setForm] = useState<Rule>(initialData || defaultForm);
 
-  // ✅ Update lại form nếu initialData thay đổi
   useEffect(() => {
     if (initialData) {
       setForm(initialData);

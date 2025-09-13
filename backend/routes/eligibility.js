@@ -92,12 +92,7 @@ router.get("/logs", async (req, res) => {
 // ✅ API: Get logs by patientId
 router.get("/logs/:patientId", async (req, res) => {
   const { patientId } = req.params;
-  const logs = await EvaluationLog.find({ patient_id }).sort({ timestamp: -1 });
-  if (logs.length === 0) {
-    return res
-      .status(404)
-      .json({ message: "No logs found for patientId " + patientId });
-  }
+  const logs = await EvaluationLog.find({ patient_id: patientId }).sort({ timestamp: -1 });
   res.json(logs);
 });
 

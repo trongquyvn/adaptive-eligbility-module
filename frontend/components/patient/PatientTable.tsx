@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
-import { statusStyle } from "@/lib/common";
+import { formatISODate, statusStyle } from "@/lib/common";
 
 interface PatientTableProps {
   patients: any[];
@@ -30,7 +30,7 @@ export default function PatientTable({ patients }: PatientTableProps) {
           <tr className="text-gray-500">
             <th className="py-3">Patient ID</th>
             <th className="py-3">Site</th>
-            <th className="py-3">Date Screened</th>
+            <th className="py-3">Created at</th>
             <th className="py-3">Status</th>
             <th className="py-3">Actions</th>
           </tr>
@@ -44,7 +44,7 @@ export default function PatientTable({ patients }: PatientTableProps) {
                   {p.site}
                 </span>
               </td>
-              <td className="py-3">{p.date}</td>
+              <td className="py-3">{formatISODate(p.date)}</td>
               <td className="py-3">
                 <span
                   className={`px-3 py-1 rounded-full ${

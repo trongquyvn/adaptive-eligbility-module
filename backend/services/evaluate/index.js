@@ -13,7 +13,6 @@ function resolveVariable(varDef, patientData, nodeType) {
   }
 
   const rawValue = getValueByPath(patientData.data, varDef.var);
-
   if (rawValue === undefined || rawValue === null) {
     return { value: null, id: varDef.var };
   }
@@ -141,7 +140,7 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
       patientData,
       node.type
     );
-
+    
     if (left === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -149,10 +148,10 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
     let ok = true;
 
     if (node.window.max_hours_since !== undefined) {
-      ok = ok && diffHours >= node.window.max_hours_since;
+      ok = ok && diffHours <= node.window.max_hours_since;
     }
     if (node.window.min_hours_since !== undefined) {
-      ok = ok && diffHours <= node.window.min_hours_since;
+      ok = ok && diffHours >= node.window.min_hours_since;
     }
 
     return ok ? true : fail(node.reason_on_fail);

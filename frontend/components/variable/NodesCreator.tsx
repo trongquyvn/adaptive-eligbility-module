@@ -58,13 +58,13 @@ const NODE_FIELDS: Record<
     { key: "input.var", label: "Variable", type: "text" },
     {
       key: "window.max_hours_since",
-      label: "Max Hours Since",
+      label: "Max Hours",
       type: "number",
       optional: true,
     },
     {
       key: "window.min_hours_since",
-      label: "Min Hours Since",
+      label: "Min Hours",
       type: "number",
       optional: true,
     },
@@ -103,7 +103,6 @@ export default function CreateNode({
   const [form, setForm] = useState<Record<string, any>>(
     initForm || { cate: "1" }
   );
-  console.log("form: ", form);
   const [domainItems, setDomainItems] = useState<
     { domain_id: string; rule: string }[]
   >(initForm?.items || [{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
@@ -123,6 +122,20 @@ export default function CreateNode({
     if (initType) {
       if (initForm && Object.keys(initForm).length) {
         setForm(initForm);
+        setDomainItems(
+          initForm?.items || [
+            { domain_id: domains[0] || "", rule: nodes[0] || "" },
+          ]
+        );
+        setConstraints(
+          initForm?.constraints || [
+            {
+              regimen_id: regimens[0] || "",
+              exclude_if: nodes[0] || "",
+              reason_on_exclude: "",
+            },
+          ]
+        );
       }
       setNodeType(initType);
       setOpen(true);
@@ -168,7 +181,7 @@ export default function CreateNode({
         return;
       }
     } else if (nodeType === "REGIMEN_RESOLVE") {
-      if (!form.input) {
+      if (!form["input.eligible_domains_ref"]) {
         alertError("Missing regimen input");
         return;
       }
@@ -201,7 +214,8 @@ export default function CreateNode({
     } else if (nodeType === "ANY" || nodeType === "ALL") {
       newNode.children = form.children;
     } else if (nodeType === "REGIMEN_RESOLVE") {
-      newNode["input.eligible_domains_ref"] = form.input;
+      newNode["input.eligible_domains_ref"] =
+        form["input.eligible_domains_ref"];
       newNode.require_min_regimens = form.require_min_regimens || 1;
       newNode.reason_on_fail = form.reason_on_fail;
       newNode.constraints = constraints;
@@ -211,6 +225,7 @@ export default function CreateNode({
     const newNodeData = objExpandKeys(newNode);
 
     const nodes = rule?.logic?.nodes || {};
+    
     if (nodes[generatedId] && !initForm) {
       showToast("Node already exists!", "info");
     }
@@ -471,8 +486,10 @@ export default function CreateNode({
                   <label className="block text-sm mb-1">Regimen input</label>
                   <select
                     className="w-full border rounded px-2 py-1"
-                    value={form.input || ""}
-                    onChange={(e) => handleChange("input", e.target.value)}
+                    value={form["input.eligible_domains_ref"] || ""}
+                    onChange={(e) =>
+                      handleChange("input.eligible_domains_ref", e.target.value)
+                    }
                   >
                     <option key="null">Select domain</option>
                     {domainNodes.map((r) => (
