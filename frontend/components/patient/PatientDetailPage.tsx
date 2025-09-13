@@ -46,7 +46,6 @@ function countPrefix(arr: string[], prefix: string): number {
 export default function PatientDetailPage({ patient }: any) {
   const { rule, updateActivePatient, activeDataKey } = usePatients();
   const variables = rule?.variables || [];
-  console.log("variables: ", variables);
   const inputVars = collectInputVars(rule);
   const variablesPatient = variables.filter((e: any) =>
     inputVars.includes(e.id)
@@ -148,8 +147,8 @@ export default function PatientDetailPage({ patient }: any) {
   const flattenData = flattenObj(data);
   const keys = Object.keys(flattenData || {});
   keys.forEach((k) => {
-    if (k !== "id" && k !== "jurisdiction") {
-      const varK = variables.find((e: any) => e.id === k);
+    const varK = variables.find((e: any) => e.id === k);
+    if (varK) {
       if (varK.type === "TIME_WINDOW") {
         initForm[k] = isoToLocalInput(flattenData[k]);
       } else {

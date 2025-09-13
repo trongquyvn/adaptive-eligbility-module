@@ -49,12 +49,28 @@ async function getPatients() {
   return res.json();
 }
 
+async function getLogs() {
+  const res = await fetch(`${API_BASE_URL}/api/logs`, {
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch patients");
+  return res.json();
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [patients, rules] = await Promise.all([getPatients(), getRules()]);
+  const [patients, rules, logs] = await Promise.all([
+    getPatients(),
+    getRules(),
+    getLogs(),
+  ]);
 
   return (
     <html lang="en">
@@ -63,7 +79,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <PatientProvider patients={patients} rules={rules}>
+          <PatientProvider patients={patients} rules={rules} logs={logs}>
             <ToastProvider>
               <NodeProvider>
                 <ConditionalLayout>{children}</ConditionalLayout>

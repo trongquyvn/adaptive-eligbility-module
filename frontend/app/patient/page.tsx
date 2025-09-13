@@ -28,11 +28,9 @@ export default function PatientPage() {
   const patients = initPatients.map((e) => {
     return {
       id: e.patient_id,
-      site: e.site || "Site A",
+      site: e.jurisdiction || "",
       date: e.createdAt || "",
-      eligibility: {
-        isDraft: e?.eligibility?.isDraft,
-      },
+      eligibility: e?.eligibility?.[activeDataKey] || {},
     };
   });
 

@@ -120,7 +120,8 @@ export default function VariableCreator({
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className={
-                    "mt-1 block w-full border rounded " + !!initForm ? "disabled" : ""
+                    "mt-1 block w-full border rounded " +
+                    (!!initForm ? "disabled" : "")
                   }
                   required
                   disabled={!!initForm}

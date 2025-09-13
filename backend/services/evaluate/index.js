@@ -42,7 +42,7 @@ function resolveVariable(varDef, patientData, nodeType) {
 
 // ------------------ EVALUATE NODE ------------------
 function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
-  node.allow_unknown = true;
+  node.allow_unknown = true; // hard code first
   if (!node) return true;
   const t = node.type;
 
@@ -50,10 +50,11 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
     if (reason && shouldAddError) ctx.key_reasons.push(reason);
     return false;
   };
+  
   const pending = (id) => {
-    ctx.hasPending = true;
+    // ctx.hasPending = true;
     ctx.data_needed.push(id);
-    return true;
+    return false;
   };
 
   if (t === "CONST_BOOL") {

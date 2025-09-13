@@ -8,6 +8,7 @@ import Link from "next/link";
 const menu = [
   { label: "Patient", icon: Home, href: "/patient" },
   { label: "Roadmap", icon: ClipboardList, href: "/roadmap" },
+  { label: "Logs", icon: Target, href: "/logs" },
   { label: "Mermaid", icon: ClipboardList, href: "/roadmap-2" },
   // { label: "Population", icon: Users, href: "/population" },
   // { label: "Objectives", icon: Target, href: "/objectives" },

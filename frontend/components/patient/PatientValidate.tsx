@@ -11,6 +11,7 @@ export default function PatientValidate({
   isRunning,
   endNum,
   isOnPass,
+  view,
 }: any) {
   const { activeDataKey } = usePatients();
   const [activeStep, setActiveStep] = useState(0);
@@ -23,7 +24,7 @@ export default function PatientValidate({
       if (typeof endNum === "number") {
         const interval = setInterval(() => {
           setActiveStep((prev) =>
-            prev < steps.length - 1 && prev < endNum ? prev + 1 : prev
+            prev < steps.length - 1 && prev < endNum - 1 ? prev + 1 : prev
           );
         }, 500);
         return () => clearInterval(interval);
@@ -103,55 +104,63 @@ export default function PatientValidate({
           </div>
 
           {eligibilityRule && eligibilityRule?.status && (
-            <>
+            <div className={view === "v2" ? "flex gap-8" : ""}>
               <div>
-                <span className="text-sm font-medium text-gray-700">
-                  Registry code
-                </span>
-                <span className="text-sm text-gray-600 ml-2">
-                  {eligibilityRule?.registry_code}
-                </span>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-700">
-                  Date Screened:
-                </span>
-                <span className="text-sm text-gray-600 ml-2">
-                  {formatISODate(eligibilityRule?.evaluated_at)}
-                </span>
-              </div>
-              {!!(
-                eligibilityRule?.key_reasons &&
-                eligibilityRule?.key_reasons.length
-              ) && (
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Reason:
+                    Registry code
                   </span>
-                  <ul className="list-disc list-inside text-sm text-gray-700">
-                    {eligibilityRule.key_reasons?.map((r: any, idx: number) => (
-                      <li key={idx}>{r}</li>
-                    ))}
-                  </ul>
+                  <span className="text-sm text-gray-600 ml-2">
+                    {eligibilityRule?.registry_code}
+                  </span>
                 </div>
-              )}
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Date Screened:
+                  </span>
+                  <span className="text-sm text-gray-600 ml-2">
+                    {formatISODate(eligibilityRule?.evaluated_at)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                {!!(
+                  eligibilityRule?.key_reasons &&
+                  eligibilityRule?.key_reasons.length
+                ) && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Reason:
+                    </span>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {eligibilityRule.key_reasons?.map(
+                        (r: any, idx: number) => (
+                          <li key={idx}>{r}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
 
-              {!!(
-                eligibilityRule?.data_needed &&
-                eligibilityRule?.data_needed.length
-              ) && (
-                <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Needed:
-                  </span>
-                  <ul className="list-disc list-inside text-sm text-gray-700">
-                    {eligibilityRule.data_needed?.map((r: any, idx: number) => (
-                      <li key={idx}>{r}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
+                {!!(
+                  eligibilityRule?.data_needed &&
+                  eligibilityRule?.data_needed.length
+                ) && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Needed:
+                    </span>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {eligibilityRule.data_needed?.map(
+                        (r: any, idx: number) => (
+                          <li key={idx}>{r}</li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </>
       )}

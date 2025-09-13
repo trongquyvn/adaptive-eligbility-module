@@ -6,13 +6,9 @@ import TagInput from "../common/TagInput";
 import SingleTagSelect from "../common/SingleTagSelect";
 import { collectInputVars, objExpandKeys } from "@/lib/common";
 import { usePatients } from "@/context/PatientContext";
-import {
-  // Calendar,
-  CheckCircle,
-  Hash,
-  FileText,
-  Tags,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle, Hash, FileText, Tags } from "lucide-react";
+import { runPatientCheck } from "@/lib/patient";
+import PatientValidate from "./PatientValidate";
 
 interface CreatePatientDialogProps {
   isOpen: boolean;
@@ -27,7 +23,7 @@ export default function CreatePatientDialog({
   onCreatePatient,
   initForm = {}, // default {}
 }: CreatePatientDialogProps) {
-  const { rule } = usePatients();
+  const { rule, activeDataKey } = usePatients();
   const varDefs = rule.variables;
   const inputVars = collectInputVars(rule);
 
@@ -38,6 +34,12 @@ export default function CreatePatientDialog({
   );
 
   // Store form state
+  const [patientTemp, setPatientTemp] = useState({});
+  const [isRunView, setIsRunView] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [endNum, setEndNum] = useState<number | undefined>();
+  const [isOnPass, setIsOnPass] = useState(true);
+
   const [formData, setFormData] = useState<Record<string, any>>({});
 
   const handleChange = (field: string, value: any) => {
@@ -50,7 +52,7 @@ export default function CreatePatientDialog({
     }
   }, [isOpen]);
 
-  const handleSubmit = (isDraft: boolean = false) => {
+  const handleSubmit = async (isDraft: boolean = false, runNow?: boolean) => {
     const form = { ...formData };
 
     // Validate all required fields
@@ -85,9 +87,50 @@ export default function CreatePatientDialog({
       return;
     }
 
-    const newNodeData = objExpandKeys(form);
-    onCreatePatient(newNodeData, isDraft);
-    onClose();
+    const newNodeData = objExpandKeys(form) as any;
+    if (runNow) {
+      setIsRunning(true);
+      setIsRunView(true);
+
+      setIsRunning(true);
+      setEndNum(undefined);
+      setIsOnPass(true);
+
+      let num = undefined;
+      let isOnPass = true;
+      const runData = {
+        trial_id: rule.trial.id,
+        trial_version: rule.trial.version,
+        jurisdiction: newNodeData.jurisdiction,
+        patient_id: newNodeData.id,
+        data: newNodeData,
+        now: new Date().toISOString(),
+      };
+      const result = await runPatientCheck(runData);
+      if (result) {
+        setPatientTemp({
+          eligibility: {
+            [activeDataKey]: {
+              ...result,
+            },
+          },
+        });
+        isOnPass = result?.isOnPass;
+        num = parseInt(result?.cate);
+
+        setIsOnPass(isOnPass);
+        setEndNum(num);
+        setTimeout(
+          () => {
+            setIsRunning(false);
+          },
+          num ? num * 500 + 500 : 1000
+        );
+      }
+    } else {
+      onCreatePatient(newNodeData, isDraft);
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -109,206 +152,241 @@ export default function CreatePatientDialog({
             </p>
           </div>
         </div>
-
-        <div className="space-y-4 overflow-y-auto mt-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">ID *</label>
-            <div className="">
-              <input
-                type="text"
-                value={formData["id"] || ""}
-                onChange={(e) => handleChange("id", e.target.value)}
-                className={
-                  "w-full pl-2 pr-3 py-2 border rounded-md " + edit ? "disabled" : ""
-                }
-                disabled={edit}
+        {isRunView ? (
+          <div className="mt-4 flex gap-8">
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setIsRunView(false);
+              }}
+            >
+              <ArrowLeft />
+            </div>
+            <div className="mt-2">
+              <PatientValidate
+                patient={patientTemp}
+                isRunning={isRunning}
+                endNum={endNum}
+                isOnPass={isOnPass}
+                view="v2"
               />
             </div>
           </div>
+        ) : (
+          <div className="space-y-4 overflow-y-auto mt-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">ID *</label>
+              <div>
+                <input
+                  type="text"
+                  value={formData["id"] || ""}
+                  onChange={(e) => handleChange("id", e.target.value)}
+                  className={
+                    "w-full pl-2 pr-3 py-2 border rounded-md " +
+                    (edit ? "disabled" : "")
+                  }
+                  disabled={edit}
+                />
+              </div>
+            </div>
 
-          <div className="">
-            <SingleTagSelect
-              label="Jurisdiction"
-              value={formData["jurisdiction"] || []}
-              onChange={(val) => handleChange("jurisdiction", val)}
-              options={rule?.trial?.jurisdiction.map((e: any) => {
-                return {
-                  label: e,
-                  value: e,
-                  color: "green",
-                };
-              })}
-              placeholder="Select jurisdiction"
-            />
-          </div>
+            <div>
+              <SingleTagSelect
+                label="Jurisdiction"
+                value={formData["jurisdiction"] || []}
+                onChange={(val) => handleChange("jurisdiction", val)}
+                options={rule?.trial?.jurisdiction.map((e: any) => {
+                  return {
+                    label: e,
+                    value: e,
+                    color: "green",
+                  };
+                })}
+                placeholder="Select jurisdiction"
+              />
+            </div>
 
-          {Object.entries(groups).map(([prefix, defs]) => {
-            // If multiple vars share the same prefix → TagInput with icon
-            if (defs.length > 1) {
-              return (
-                <div key={prefix}>
-                  <label className="block text-sm font-medium mb-1">
-                    {prefix} *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
-                      <Tags className="w-5 h-5" />
-                    </span>
-                    <div className="pl-8">
-                      <TagInput
-                        label=""
-                        value={formData[prefix] || []}
-                        onChange={(val) => handleChange(prefix, val)}
-                        options={defs.map((d) => d.name)}
-                        color="blue"
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            // Single variable → render based on type
-            const def = defs[0];
-            const val = formData[def.id] ?? "";
-
-            switch (def.type) {
-              case "BOOLEAN":
+            {Object.entries(groups).map(([prefix, defs]) => {
+              // If multiple vars share the same prefix → TagInput with icon
+              if (defs.length > 1) {
                 return (
-                  <div key={def.id}>
+                  <div key={prefix}>
                     <label className="block text-sm font-medium mb-1">
-                      {def.name} *
-                    </label>
-                    <div className="flex items-center gap-4">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={def.id}
-                          value="true"
-                          checked={val === "true"}
-                          onChange={(e) => handleChange(def.id, e.target.value)}
-                        />
-                        Yes
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={def.id}
-                          value="false"
-                          checked={val === "false"}
-                          onChange={(e) => handleChange(def.id, e.target.value)}
-                        />
-                        No
-                      </label>
-                    </div>
-                  </div>
-                );
-
-              case "TIME_WINDOW":
-                return (
-                  <div key={def.id}>
-                    <label className="block text-sm font-medium mb-1">
-                      {def.name} *
-                    </label>
-                    <div className="">
-                      <input
-                        type="datetime-local"
-                        value={val}
-                        onChange={(e) => handleChange(def.id, e.target.value)}
-                        className="w-full pl-2 pr-3 py-2 border rounded-md"
-                      />
-                    </div>
-                  </div>
-                );
-
-              case "NUMBER":
-                return (
-                  <div key={def.id}>
-                    <label className="block text-sm font-medium mb-1">
-                      {def.name} *
+                      {prefix} *
                     </label>
                     <div className="relative">
                       <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
-                        <Hash className="w-5 h-5" />
+                        <Tags className="w-5 h-5" />
                       </span>
-                      <input
-                        type="number"
-                        value={val}
-                        onChange={(e) => handleChange(def.id, e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border rounded-md"
-                      />
+                      <div className="pl-8">
+                        <TagInput
+                          label=""
+                          value={formData[prefix] || []}
+                          onChange={(val) => handleChange(prefix, val)}
+                          options={defs.map((d) => d.name)}
+                          color="blue"
+                        />
+                      </div>
                     </div>
                   </div>
                 );
+              }
 
-              case "DATA":
-              default:
-                return (
-                  <div key={def.id}>
-                    <label className="block text-sm font-medium mb-1">
-                      {def.name} *
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
-                        <FileText className="w-5 h-5" />
-                      </span>
-                      <input
-                        type="text"
-                        value={val}
-                        onChange={(e) => handleChange(def.id, e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border rounded-md"
-                      />
+              // Single variable → render based on type
+              const def = defs[0];
+              const val = formData[def.id] ?? "";
+
+              switch (def.type) {
+                case "BOOLEAN":
+                  return (
+                    <div key={def.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {def.name} *
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={def.id}
+                            value="true"
+                            checked={val === "true"}
+                            onChange={(e) =>
+                              handleChange(def.id, e.target.value)
+                            }
+                          />
+                          Yes
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={def.id}
+                            value="false"
+                            checked={val === "false"}
+                            onChange={(e) =>
+                              handleChange(def.id, e.target.value)
+                            }
+                          />
+                          No
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                );
-            }
-          })}
+                  );
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </button>
+                case "TIME_WINDOW":
+                  return (
+                    <div key={def.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {def.name} *
+                      </label>
+                      <div className="">
+                        <input
+                          type="datetime-local"
+                          value={val}
+                          onChange={(e) => handleChange(def.id, e.target.value)}
+                          className="w-full pl-2 pr-3 py-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                  );
 
-            {!Object.keys(initForm).length ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSubmit(true);
-                  }}
-                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
-                >
-                  Save draft
-                </button>
+                case "NUMBER":
+                  return (
+                    <div key={def.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {def.name} *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                          <Hash className="w-5 h-5" />
+                        </span>
+                        <input
+                          type="number"
+                          value={val}
+                          onChange={(e) => handleChange(def.id, e.target.value)}
+                          className="w-full pl-10 pr-3 py-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                  );
 
-                <button
-                  onClick={() => {
-                    handleSubmit(false);
-                  }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-                >
-                  Create Patient
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => {
-                    handleSubmit(false);
-                  }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-                >
-                  Update Patient
-                </button>
-              </>
-            )}
+                case "DATA":
+                default:
+                  return (
+                    <div key={def.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {def.name} *
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">
+                          <FileText className="w-5 h-5" />
+                        </span>
+                        <input
+                          type="text"
+                          value={val}
+                          onChange={(e) => handleChange(def.id, e.target.value)}
+                          className="w-full pl-10 pr-3 py-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                  );
+              }
+            })}
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              {!Object.keys(initForm).length ? (
+                <>
+                  <button
+                    onClick={() => {
+                      handleSubmit(false, true);
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                  >
+                    Run Eligibility
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSubmit(true);
+                    }}
+                    className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                  >
+                    Save draft
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleSubmit(false);
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                  >
+                    Create Patient
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      handleSubmit(false);
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                  >
+                    Update Patient
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Modal>
   );

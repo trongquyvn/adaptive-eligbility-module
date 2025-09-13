@@ -14,6 +14,7 @@ interface PatientContextProps {
   patients: any[];
   rule: Record<string, any>;
   rules: Record<string, any>[];
+  logs: Record<string, any>[];
   addRule: (e: Record<string, any>) => void;
   setActiveRule: Dispatch<SetStateAction<number>>;
   activeRule: number;
@@ -28,6 +29,7 @@ const PatientContext = createContext<PatientContextProps>({
   patients: [],
   rule: {},
   rules: [],
+  logs: [],
   addPatient: () => {},
   addRule: () => {},
   setActiveRule: () => {},
@@ -42,10 +44,12 @@ export const usePatients = () => useContext(PatientContext);
 export function PatientProvider({
   patients,
   rules,
+  logs,
   children,
 }: {
   patients: any[];
   rules: Record<string, any>[];
+  logs: Record<string, any>[];
   children: React.ReactNode;
 }) {
   const [listPatients, setListPatients] = useState(patients);
@@ -108,6 +112,7 @@ export function PatientProvider({
         updateActiveRule,
         addPatient,
         updateActivePatient,
+        logs,
       }}
     >
       {children}

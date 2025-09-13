@@ -85,7 +85,7 @@ router.post("/check", async (req, res) => {
 
 // ✅ API: Get logs (all, newest first)
 router.get("/logs", async (req, res) => {
-  const logs = await EvaluationLog.find().sort({ timestamp: -1 }).limit(20);
+  const logs = await EvaluationLog.find().sort({ timestamp: -1 });
   res.json(logs);
 });
 
