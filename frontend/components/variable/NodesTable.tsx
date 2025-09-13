@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import { cateList } from "@/constants";
 import Tooltip from "@/components/common/Tooltip";
-import { Info } from "lucide-react";
-import { Pencil } from "lucide-react";
+import { Info, Pencil, XCircle } from "lucide-react";
 import { useNodes } from "@/context/NodeContext";
 import { flattenObj } from "@/lib/common";
 
@@ -136,6 +135,10 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
     });
   };
 
+  const removeNode = (node: any) => {
+    
+  };
+
   return (
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
       {!cate && (
@@ -187,11 +190,18 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
                 {node?.cate ? cateMap[node?.cate] || node?.cate : "-"}
               </td>
               <td className="py-3">{renderData(node)}</td>
-              <td className="py-3">
+              <td className="py-3 flex gap-4">
                 <Pencil
                   className="w-4 h-4 cursor-pointer"
                   onClick={() => {
                     editNode(node);
+                  }}
+                />
+
+                <XCircle
+                  className="w-4 h-4 cursor-pointer text-red-700"
+                  onClick={() => {
+                    removeNode(node);
                   }}
                 />
               </td>

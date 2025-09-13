@@ -135,6 +135,22 @@ export default function PatientValidate({
                   </ul>
                 </div>
               )}
+
+              {!!(
+                eligibilityRule?.data_needed &&
+                eligibilityRule?.data_needed.length
+              ) && (
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Needed:
+                  </span>
+                  <ul className="list-disc list-inside text-sm text-gray-700">
+                    {eligibilityRule.data_needed?.map((r: any, idx: number) => (
+                      <li key={idx}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </>
           )}
         </>

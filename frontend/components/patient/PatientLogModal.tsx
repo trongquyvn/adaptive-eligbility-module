@@ -84,7 +84,7 @@ export default function PatientLogModal({
               </p>
 
               <div className="mt-2">
-                <strong>Key Reasons:</strong>
+                <strong>Reasons:</strong>
                 <ul className="list-disc list-inside text-sm text-gray-700">
                   {log.key_reasons?.map((r: any, idx: number) => (
                     <li key={idx}>{r}</li>

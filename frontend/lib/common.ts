@@ -182,3 +182,60 @@ export const statusStyle: any = {
   Draft: "bg-gray-100 text-gray-600",
   Active: "bg-purple-600 text-gray-600 text-white",
 };
+
+export function canDeleteNode(ruleDoc: any, nodeId: string): boolean {
+  if (!ruleDoc?.logic?.nodes || !ruleDoc?.logic?.flow) return true;
+
+  const nodes = ruleDoc.logic.nodes;
+  const visited = new Set<string>();
+  const queue: string[] = [];
+
+  for (const step of ruleDoc.logic.flow) {
+    if (step.id) queue.push(step.id);
+    if (step.on_pass?.next) queue.push(step.on_pass.next);
+    if (step.on_fail?.next) queue.push(step.on_fail.next);
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    if (current === nodeId) {
+      return false;
+    }
+
+    const node = nodes[current];
+    if (!node) continue;
+
+    switch (node.type) {
+      case "IF":
+        [node.cond, node.then, node.else].forEach((child) => {
+          if (child) queue.push(child);
+        });
+        break;
+
+      case "ANY":
+      case "ALL":
+        node.children?.forEach((child: string) => queue.push(child));
+        break;
+
+      case "DOMAIN_MAP":
+        node.items?.forEach((it: any) => {
+          if (it.rule) queue.push(it.rule);
+        });
+        break;
+
+      case "REGIMEN_RESOLVE":
+        node.constraints?.forEach((c: any) => {
+          if (c.exclude_if) queue.push(c.exclude_if);
+        });
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return true;
+}

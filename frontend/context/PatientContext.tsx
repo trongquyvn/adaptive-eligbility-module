@@ -67,6 +67,8 @@ export function PatientProvider({
     if (activeRule >= listRules.length) {
       setActiveRule(0);
       localStorage.setItem("activeRule", "0");
+    } else {
+      localStorage.setItem("activeRule", String(activeRule));
     }
   }, [activeRule, listRules]);
 
