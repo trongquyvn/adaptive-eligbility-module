@@ -94,6 +94,22 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
     return result ? true : fail(node.reason_on_fail);
   }
 
+  if (t === "DATA") {
+    const { value: left, id } = resolveVariable(
+      node.input,
+      patientData,
+      node.type
+    );
+
+    if (left === null) {
+      return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
+    }
+
+    const right = node?.right?.const || "";
+    const result = left.toLowerCase().trim() === right.toLowerCase().trim();
+    return result ? true : fail(node.reason_on_fail);
+  }
+
   if (t === "BOOLEAN" || t === "DATABASE") {
     const { value, id } = resolveVariable(node.input, patientData, node.type);
     if (value === null) {
@@ -141,7 +157,7 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
       patientData,
       node.type
     );
-    
+
     if (left === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }

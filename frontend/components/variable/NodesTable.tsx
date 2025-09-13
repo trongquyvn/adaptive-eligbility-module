@@ -5,11 +5,16 @@ import { cateList } from "@/constants";
 import Tooltip from "@/components/common/Tooltip";
 import { Info, Pencil, XCircle } from "lucide-react";
 import { useNodes } from "@/context/NodeContext";
-import { flattenObj } from "@/lib/common";
+import { canDeleteNode, flattenObj } from "@/lib/common";
+import { usePatients } from "@/context/PatientContext";
+import { updateRule } from "@/lib/rule";
+import { useToast } from "@/context/ToastContext";
 
 interface NodesTableProps {
   nodes: Record<string, any>;
+  flow?: Record<string, any>[];
   cate?: string; // cate id (optional)
+  canEdit?: boolean;
 }
 
 function renderData(node: any) {
@@ -109,7 +114,12 @@ function renderData(node: any) {
   }
 }
 
-export default function NodesTable({ nodes, cate }: NodesTableProps) {
+export default function NodesTable({ cate, canEdit }: NodesTableProps) {
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
+
+  const nodes = rule?.logic?.nodes || {};
+  const flow = rule?.logic?.flow || [];
   const [selectedCate, setSelectedCate] = useState<string>("all");
   const { setNoteForm } = useNodes();
 
@@ -135,8 +145,29 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
     });
   };
 
-  const removeNode = (node: any) => {
-    
+  const removeNode = async (nodeId: any) => {
+    const canDel = canDeleteNode(nodeId, nodes, flow);
+    if (canDel) {
+      const next = confirm("Are you sure you want to delete this item?");
+      if (next) {
+        const newNodes = { ...nodes };
+        delete newNodes[nodeId];
+        const newRule = {
+          ...rule,
+          logic: {
+            ...rule?.logic,
+            nodes: newNodes,
+          },
+        };
+        const result = await updateRule(rule._id, newRule);
+        if (result) {
+          updateActiveRule(result);
+          showToast("Deleted Node!", "success");
+        }
+      }
+    } else {
+      alert("Can't delete used node");
+    }
   };
 
   return (
@@ -168,7 +199,7 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
             <th className="py-3">Type</th>
             <th className="py-3">Cate</th>
             <th className="py-3">Data</th>
-            <th className="py-3"></th>
+            {canEdit && <th className="py-3"></th>}
           </tr>
         </thead>
         <tbody>
@@ -190,21 +221,23 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
                 {node?.cate ? cateMap[node?.cate] || node?.cate : "-"}
               </td>
               <td className="py-3">{renderData(node)}</td>
-              <td className="py-3 flex gap-4">
-                <Pencil
-                  className="w-4 h-4 cursor-pointer"
-                  onClick={() => {
-                    editNode(node);
-                  }}
-                />
+              {canEdit && (
+                <td className="py-3 flex gap-4">
+                  <Pencil
+                    className="w-4 h-4 cursor-pointer"
+                    onClick={() => {
+                      editNode(node);
+                    }}
+                  />
 
-                <XCircle
-                  className="w-4 h-4 cursor-pointer text-red-700"
-                  onClick={() => {
-                    removeNode(node);
-                  }}
-                />
-              </td>
+                  <XCircle
+                    className="w-4 h-4 cursor-pointer text-red-700"
+                    onClick={() => {
+                      removeNode(key);
+                    }}
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

@@ -8,16 +8,7 @@ import { useToast } from "@/context/ToastContext";
 import { usePatients } from "@/context/PatientContext";
 import { updateRule } from "@/lib/rule";
 
-type NodeType =
-  | "BOOLEAN"
-  | "COMPARE"
-  | "TIME_WINDOW"
-  | "NOT"
-  | "ANY"
-  | "ALL"
-  | "IF"
-  | "DOMAIN_MAP"
-  | "REGIMEN_RESOLVE";
+type NodeType = string;
 
 interface CreateNodeProps {
   nodes: string[];
@@ -84,6 +75,11 @@ const NODE_FIELDS: Record<
       label: "Require Min Regimens",
       type: "number",
     },
+    { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
+  ],
+  DATA: [
+    { key: "input.var", label: "Variable", type: "text" },
+    { key: "right.const", label: "Right Const", type: "text" },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
 };
@@ -225,7 +221,7 @@ export default function CreateNode({
     const newNodeData = objExpandKeys(newNode);
 
     const nodes = rule?.logic?.nodes || {};
-    
+
     if (nodes[generatedId] && !initForm) {
       showToast("Node already exists!", "info");
     }

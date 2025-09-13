@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TagInput from "@/components/common/TagInput";
 import { usePatients } from "@/context/PatientContext";
 import { useToast } from "@/context/ToastContext";
 import { updateRule } from "@/lib/rule";
 
-type Variable = {
-  id: string;
-  name: string;
-  type: string;
-  codes?: string[];
-  multiple?: boolean;
-};
+type Variable = any;
 
-export default function VariableCreator() {
+interface VariableCreatorProps {
+  initForm?: Variable | null;
+  trigger?: React.ReactNode; // optional: custom button
+  onClose?: () => void;
+}
+
+export default function VariableCreator({
+  initForm,
+  trigger,
+  onClose,
+}: VariableCreatorProps) {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -25,6 +29,16 @@ export default function VariableCreator() {
 
   const [listValues, setListValues] = useState<string[]>([]);
   const [multiple, setMultiple] = useState(false);
+
+  // fill data khi edit
+  useEffect(() => {
+    if (initForm) {
+      setShowModal(true);
+      setForm({ name: initForm.name, type: initForm.type });
+      // setListValues(initForm.codes || []);
+      // setMultiple(!!initForm.multiple);
+    }
+  }, [initForm]);
 
   const generatedId = form.name.trim().toLowerCase().replace(/\s+/g, ".");
 
@@ -43,21 +57,33 @@ export default function VariableCreator() {
       newVar.multiple = multiple;
     }
 
-    const check = rule.variables.find((e: any) => e.id === newVar.id);
-    if (check) {
-      showToast("Variable already exists!", "info");
+    let newVariables;
+    if (initForm) {
+      // update mode
+      newVariables = rule.variables.map((v: any) =>
+        v.id === initForm.id ? newVar : v
+      );
     } else {
-      const newRule = {
-        ...rule,
-        variables: [...rule.variables, newVar],
-      };
-
-      const result = await updateRule(rule._id, newRule);
-      if (result) {
-        updateActiveRule(result);
-        showToast("Add Variable!", "success");
+      // create mode
+      const check = rule.variables.find((e: any) => e.id === newVar.id);
+      if (check) {
+        showToast("Variable already exists!", "info");
+        return;
       }
+      newVariables = [...rule.variables, newVar];
     }
+
+    const newRule = {
+      ...rule,
+      variables: newVariables,
+    };
+
+    const result = await updateRule(rule._id, newRule);
+    if (result) {
+      updateActiveRule(result);
+      showToast(initForm ? "Updated Variable!" : "Added Variable!", "success");
+    }
+
     // reset
     setForm({ name: "", type: "BOOLEAN" });
     setListValues([]);
@@ -66,19 +92,25 @@ export default function VariableCreator() {
   };
 
   return (
-    <div className="">
-      <button
-        onClick={() => setShowModal(true)}
-        className="px-4 py-2 bg-blue-600 text-white shadow hover:bg-blue-700"
-      >
-        + Add Variable
-      </button>
+    <div>
+      {trigger ? (
+        <span onClick={() => setShowModal(true)}>{trigger}</span>
+      ) : (
+        <button
+          onClick={() => setShowModal(true)}
+          className="px-4 py-2 bg-blue-600 text-white shadow hover:bg-blue-700"
+        >
+          {initForm ? "Edit Variable" : "+ Add Variable"}
+        </button>
+      )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 bg-opacity-40 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Create Variable</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              {initForm ? "Edit Variable" : "Create Variable"}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
@@ -87,8 +119,11 @@ export default function VariableCreator() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="mt-1 block w-full border rounded"
+                  className={
+                    "mt-1 block w-full border rounded " + !!initForm ? "disabled" : ""
+                  }
                   required
+                  disabled={!!initForm}
                 />
               </div>
 
@@ -144,7 +179,10 @@ export default function VariableCreator() {
               <div className="flex justify-end space-x-2 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    onClose?.();
+                    setShowModal(false);
+                  }}
                   className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
@@ -153,7 +191,7 @@ export default function VariableCreator() {
                   type="submit"
                   className="px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  Save
+                  {initForm ? "Update" : "Save"}
                 </button>
               </div>
             </form>

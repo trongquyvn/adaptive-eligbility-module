@@ -6,7 +6,7 @@ import NodesTable from "@/components/variable/NodesTable";
 export default function Index() {
   const { rule } = usePatients();
   const regimens = rule?.regimen_catalog || [];
-  const nodes = rule?.logic?.nodes || [];
+  const nodes = rule?.logic?.nodes || {};
 
   return (
     <div>

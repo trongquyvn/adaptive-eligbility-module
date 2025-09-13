@@ -183,14 +183,17 @@ export const statusStyle: any = {
   Active: "bg-purple-600 text-gray-600 text-white",
 };
 
-export function canDeleteNode(ruleDoc: any, nodeId: string): boolean {
-  if (!ruleDoc?.logic?.nodes || !ruleDoc?.logic?.flow) return true;
+export function canDeleteNode(
+  nodeId: string,
+  nodes?: Record<string, any>,
+  flow?: Record<string, any>[]
+): boolean {
+  if (!nodes || !flow) return true;
 
-  const nodes = ruleDoc.logic.nodes;
   const visited = new Set<string>();
   const queue: string[] = [];
 
-  for (const step of ruleDoc.logic.flow) {
+  for (const step of flow) {
     if (step.id) queue.push(step.id);
     if (step.on_pass?.next) queue.push(step.on_pass.next);
     if (step.on_fail?.next) queue.push(step.on_fail.next);

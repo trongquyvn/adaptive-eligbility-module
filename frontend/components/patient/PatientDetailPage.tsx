@@ -46,6 +46,7 @@ function countPrefix(arr: string[], prefix: string): number {
 export default function PatientDetailPage({ patient }: any) {
   const { rule, updateActivePatient, activeDataKey } = usePatients();
   const variables = rule?.variables || [];
+  console.log("variables: ", variables);
   const inputVars = collectInputVars(rule);
   const variablesPatient = variables.filter((e: any) =>
     inputVars.includes(e.id)
@@ -147,26 +148,29 @@ export default function PatientDetailPage({ patient }: any) {
   const flattenData = flattenObj(data);
   const keys = Object.keys(flattenData || {});
   keys.forEach((k) => {
-    const varK = variables.find((e: any) => e.id === k);
-    if (varK.type === "TIME_WINDOW") {
-      initForm[k] = isoToLocalInput(flattenData[k]);
-    } else {
-      if (varK.type === "BOOLEAN") {
-        const prefix = k.includes(".") ? k.split(".")[0] : k;
-        const count = countPrefix(keys, `${prefix}.`);
-        if (count > 1) {
-          if (!initForm[prefix]) initForm[prefix] = [];
-          if (flattenData[k]) {
-            initForm[prefix].push(varK.name);
+    if (k !== "id" && k !== "jurisdiction") {
+      const varK = variables.find((e: any) => e.id === k);
+      if (varK.type === "TIME_WINDOW") {
+        initForm[k] = isoToLocalInput(flattenData[k]);
+      } else {
+        if (varK.type === "BOOLEAN") {
+          const prefix = k.includes(".") ? k.split(".")[0] : k;
+          const count = countPrefix(keys, `${prefix}.`);
+          if (count > 1) {
+            if (!initForm[prefix]) initForm[prefix] = [];
+            if (flattenData[k]) {
+              initForm[prefix].push(varK.name);
+            }
+          } else {
+            initForm[k] = flattenData[k];
           }
         } else {
           initForm[k] = flattenData[k];
         }
-      } else {
-        initForm[k] = flattenData[k];
       }
     }
   });
+  initForm.id = patient_id;
   initForm.jurisdiction = jurisdiction;
 
   return (

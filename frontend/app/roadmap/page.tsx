@@ -34,7 +34,9 @@ const tabs = [
 export default function RoadmapPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const { rule } = usePatients();
-  const { initType, initForm, setNoteForm } = useNodes();
+  const { initType, initForm, setNoteForm, initVariableForm, setVariableForm } =
+    useNodes();
+  console.log("initVariableForm: ", initVariableForm);
 
   const domainNodes: string[] = [];
   const nodes: string[] = [];
@@ -90,7 +92,14 @@ export default function RoadmapPage() {
         )}
 
         {activeTab === "domain" && <DomainCreator />}
-        {activeTab === "variables" && <VariableCreator />}
+        {activeTab === "variables" && (
+          <VariableCreator
+            initForm={initVariableForm}
+            onClose={() => {
+              setVariableForm();
+            }}
+          />
+        )}
         {activeTab === "regimen" && <RegimenCreator domains={domainsCatalog} />}
         {activeTab === "node" && (
           <NodesCreator

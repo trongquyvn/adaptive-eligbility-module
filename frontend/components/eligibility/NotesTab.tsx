@@ -4,12 +4,13 @@ import NodesTable from "@/components/variable/NodesTable";
 
 export default function Index() {
   const { rule } = usePatients();
-  const nodes = rule?.logic?.nodes || [];
+  const nodes = rule?.logic?.nodes || {};
+  const flow = rule?.logic?.flow || [];
 
   return (
     <div>
       <h2 className="text-lg font-semibold mb-2">Nodes</h2>
-      <NodesTable nodes={nodes} />
+      <NodesTable nodes={nodes} flow={flow} canEdit={true} />
     </div>
   );
 }

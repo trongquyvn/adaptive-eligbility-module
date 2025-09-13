@@ -92,6 +92,7 @@ export default function CreatePatientDialog({
 
   if (!isOpen) return null;
 
+  const edit = !!Object.keys(initForm).length;
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="flex flex-col h-full">
@@ -115,9 +116,12 @@ export default function CreatePatientDialog({
             <div className="">
               <input
                 type="text"
-                value={formData["id"] || ''}
+                value={formData["id"] || ""}
                 onChange={(e) => handleChange("id", e.target.value)}
-                className="w-full pl-2 pr-3 py-2 border rounded-md"
+                className={
+                  "w-full pl-2 pr-3 py-2 border rounded-md " + edit ? "disabled" : ""
+                }
+                disabled={edit}
               />
             </div>
           </div>
