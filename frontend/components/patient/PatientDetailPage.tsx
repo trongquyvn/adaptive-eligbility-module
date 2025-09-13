@@ -105,7 +105,7 @@ export default function PatientDetailPage({ patient }: any) {
       () => {
         setIsRunning(false);
       },
-      num ? num * 500 : 500
+      num ? num * 500 + 500 : 1000
     );
   };
 

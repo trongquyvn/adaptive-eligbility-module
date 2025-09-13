@@ -65,24 +65,28 @@ export default function PatientValidate({
 
             {/* Steps */}
             <div className="flex items-center gap-3 text-sm">
-              {steps.map((step, idx) => (
-                <div key={idx} className="flex items-center gap-2">
-                  <span
-                    className={
-                      idx === endNum - 1 && !isOnPass
-                        ? "text-red-600 font-medium"
-                        : idx <= activeStep
-                        ? "text-green-600 font-medium"
-                        : "text-gray-600"
-                    }
-                  >
-                    {step}
-                  </span>
-                  {idx < steps.length - 1 && (
-                    <span className="text-gray-400">••</span>
-                  )}
-                </div>
-              ))}
+              {steps.map((step, idx) => {
+                return (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span
+                      className={
+                        idx <= activeStep
+                          ? activeStep === endNum - 1 &&
+                            idx + 1 === endNum &&
+                            !isOnPass
+                            ? "text-red-600 font-medium"
+                            : "text-green-600 font-medium"
+                          : "text-gray-600"
+                      }
+                    >
+                      {step}
+                    </span>
+                    {idx < steps.length - 1 && (
+                      <span className="text-gray-400">••</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </>
@@ -100,6 +104,14 @@ export default function PatientValidate({
 
           {eligibilityRule && eligibilityRule?.status && (
             <>
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  Registry code
+                </span>
+                <span className="text-sm text-gray-600 ml-2">
+                  {eligibilityRule?.registry_code}
+                </span>
+              </div>
               <div>
                 <span className="text-sm font-medium text-gray-700">
                   Date Screened:

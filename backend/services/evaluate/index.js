@@ -96,8 +96,6 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
 
   if (t === "BOOLEAN" || t === "DATABASE") {
     const { value, id } = resolveVariable(node.input, patientData, node.type);
-    console.log("id: ", id);
-    console.log("value: ", value);
     if (value === null) {
       return node.allow_unknown ? pending(id) : fail(node.reason_on_fail);
     }
@@ -337,6 +335,7 @@ async function evaluate(patientData, ruleDoc, mode = "flow") {
   return {
     ...coreResult,
     evaluated_at: new Date().toISOString(),
+    rules_id: ruleDoc.trial.id,
     rules_version: ruleDoc.trial.version,
   };
 }

@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
+import { statusStyle } from "@/lib/common";
 
 interface PatientTableProps {
   patients: any[];
 }
-
-const statusStyle: any = {
-  Eligible: "bg-green-100 text-green-700 text-white",
-  Ineligible: "bg-red-100 text-red-700 text-white",
-  Pending: "bg-gray-100 text-gray-600",
-  Draft: "bg-gray-100 text-gray-600",
-  Active: "bg-purple-600 text-gray-600 text-white",
-};
 
 export default function PatientTable({ patients }: PatientTableProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
