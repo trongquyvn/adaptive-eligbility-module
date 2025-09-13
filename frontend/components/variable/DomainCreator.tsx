@@ -66,7 +66,7 @@ export default function DomainCreator() {
                   value={form.id}
                   onChange={(e) => setForm({ ...form, id: e.target.value })}
                   required
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border-gray-300"
                   placeholder="e.g. antibiotics"
                 />
               </div>

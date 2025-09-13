@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { cateList } from "@/constants";
 import Tooltip from "@/components/common/Tooltip";
 import { Info } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { useNodes } from "@/context/NodeContext";
+import { flattenObj } from "@/lib/common";
 
 interface NodesTableProps {
   nodes: Record<string, any>;
@@ -109,6 +112,7 @@ function renderData(node: any) {
 
 export default function NodesTable({ nodes, cate }: NodesTableProps) {
   const [selectedCate, setSelectedCate] = useState<string>("all");
+  const { setNoteForm } = useNodes();
 
   const cateMap: Record<string, string> = Object.fromEntries(
     cateList.map((c) => [c.id, c.name])
@@ -124,6 +128,13 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
           : node?.cate === activeCate
         : false
   );
+
+  const editNode = (node: any) => {
+    setNoteForm({
+      initType: node.type,
+      initForm: flattenObj(node),
+    });
+  };
 
   return (
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -154,6 +165,7 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
             <th className="py-3">Type</th>
             <th className="py-3">Cate</th>
             <th className="py-3">Data</th>
+            <th className="py-3"></th>
           </tr>
         </thead>
         <tbody>
@@ -175,6 +187,14 @@ export default function NodesTable({ nodes, cate }: NodesTableProps) {
                 {node?.cate ? cateMap[node?.cate] || node?.cate : "-"}
               </td>
               <td className="py-3">{renderData(node)}</td>
+              <td className="py-3">
+                <Pencil
+                  className="w-4 h-4 cursor-pointer"
+                  onClick={() => {
+                    editNode(node);
+                  }}
+                />
+              </td>
             </tr>
           ))}
         </tbody>

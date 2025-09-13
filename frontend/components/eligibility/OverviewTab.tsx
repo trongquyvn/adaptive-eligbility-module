@@ -16,7 +16,7 @@ const renderOutcome = (data: any) => {
   return (
     <div>
       <div>{data?.outcome}</div>
-      {data?.message && <div>{data.message}</div>}
+      {data?.code && <div>({data.code})</div>}
     </div>
   );
 };

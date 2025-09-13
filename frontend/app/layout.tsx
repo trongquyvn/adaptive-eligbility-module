@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthProvider";
 import { PatientProvider } from "@/context/PatientContext";
+import { NodeProvider } from "@/context/NodeContext";
+
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 import { API_BASE_URL } from "@/constants";
 import { ToastProvider } from "@/context/ToastContext";
@@ -63,7 +65,9 @@ export default async function RootLayout({
         <AuthProvider>
           <PatientProvider patients={patients} rules={rules}>
             <ToastProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
+              <NodeProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </NodeProvider>
             </ToastProvider>
           </PatientProvider>
         </AuthProvider>

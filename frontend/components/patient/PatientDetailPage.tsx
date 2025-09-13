@@ -203,22 +203,26 @@ export default function PatientDetailPage({ patient }: any) {
                 </span>
                 <StatusTag value={eligibilityRule?.status || "Pending"} />
               </div>
-              <div>
-                <span className="text-sm font-medium text-gray-700">
-                  Date Screened:
-                </span>
-                <span className="text-sm text-gray-600 ml-2">
-                  {eligibilityRule?.dateScreened}
-                </span>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-700">
-                  Reason:
-                </span>
-                <p className="text-sm text-gray-600 mt-1">
-                  {eligibilityRule?.reason}
-                </p>
-              </div>
+              {eligibilityRule && eligibilityRule?.status !== "Pending" && (
+                <>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Date Screened:
+                    </span>
+                    <span className="text-sm text-gray-600 ml-2">
+                      {eligibilityRule?.dateScreened}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Reason:
+                    </span>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {eligibilityRule?.reason}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

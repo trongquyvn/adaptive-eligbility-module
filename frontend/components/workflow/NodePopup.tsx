@@ -347,62 +347,68 @@ export default function NodePopup({
                       </div>
 
                       {/* On Fail */}
-                      <div className="border rounded p-3">
-                        <h4 className="font-medium mb-2">On Fail</h4>
-                        <div className="flex items-center gap-4 mb-2">
-                          <label className="flex items-center gap-1">
-                            <input
-                              type="radio"
-                              checked={failType === "next"}
-                              onChange={() => setFailType("next")}
-                            />
-                            Next
-                          </label>
-                          <label className="flex items-center gap-1">
-                            <input
-                              type="radio"
-                              checked={failType === "outcome"}
-                              onChange={() => setFailType("outcome")}
-                            />
-                            Outcome
-                          </label>
-                        </div>
-                        {failType === "next" ? (
-                          <select
-                            value={onFailNext}
-                            onChange={(e) => setOnFailNext(e.target.value)}
-                            className="w-full border rounded px-2 py-1"
-                          >
-                            <option value="">-- none --</option>
-                            {nodeOptions.map((id) => (
-                              <option key={id} value={id}>
-                                {nodes?.[id]?.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <>
-                            <input
-                              type="text"
-                              value={onFailOutcome}
-                              onChange={(e) => setOnFailOutcome(e.target.value)}
+                      {nodeData.type !== "DOMAIN_MAP" && (
+                        <div className="border rounded p-3">
+                          <h4 className="font-medium mb-2">On Fail</h4>
+                          <div className="flex items-center gap-4 mb-2">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                checked={failType === "next"}
+                                onChange={() => setFailType("next")}
+                              />
+                              Next
+                            </label>
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                checked={failType === "outcome"}
+                                onChange={() => setFailType("outcome")}
+                              />
+                              Outcome
+                            </label>
+                          </div>
+                          {failType === "next" ? (
+                            <select
+                              value={onFailNext}
+                              onChange={(e) => setOnFailNext(e.target.value)}
                               className="w-full border rounded px-2 py-1"
-                              placeholder="Outcome"
-                            />
-                            <div className="mt-2">
-                              <label className="block text-sm font-medium">
-                                Code
-                              </label>
+                            >
+                              <option value="">-- none --</option>
+                              {nodeOptions.map((id) => (
+                                <option key={id} value={id}>
+                                  {nodes?.[id]?.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <>
                               <input
                                 type="text"
-                                value={onFailCode}
-                                onChange={(e) => setOnFailCode(e.target.value)}
+                                value={onFailOutcome}
+                                onChange={(e) =>
+                                  setOnFailOutcome(e.target.value)
+                                }
                                 className="w-full border rounded px-2 py-1"
+                                placeholder="Outcome"
                               />
-                            </div>
-                          </>
-                        )}
-                      </div>
+                              <div className="mt-2">
+                                <label className="block text-sm font-medium">
+                                  Code
+                                </label>
+                                <input
+                                  type="text"
+                                  value={onFailCode}
+                                  onChange={(e) =>
+                                    setOnFailCode(e.target.value)
+                                  }
+                                  className="w-full border rounded px-2 py-1"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex justify-end gap-3 pt-2">
                         <button

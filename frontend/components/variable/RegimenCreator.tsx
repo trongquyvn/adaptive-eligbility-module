@@ -79,7 +79,7 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
                     setForm({ ...form, domain_id: e.target.value })
                   }
                   required
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border-gray-300"
                 >
                   <option value="">-- Select Domain --</option>
                   {domains.map((d) => (
@@ -98,7 +98,7 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
                   value={form.id}
                   onChange={(e) => setForm({ ...form, id: e.target.value })}
                   required
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border-gray-300"
                   placeholder="e.g. abx_a"
                 />
               </div>
@@ -111,7 +111,7 @@ export default function RegimenCreator({ domains }: RegimenCreatorProps) {
                   value={form.label}
                   onChange={(e) => setForm({ ...form, label: e.target.value })}
                   required
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
+                  className="mt-1 block w-full border-gray-300"
                   placeholder="e.g. ABX Regimen A"
                 />
               </div>

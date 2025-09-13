@@ -18,6 +18,7 @@ import NodesCreator from "@/components/variable/NodesCreator";
 
 import { useState } from "react";
 import { usePatients } from "@/context/PatientContext";
+import { useNodes } from "@/context/NodeContext";
 
 const tabs = [
   { id: "overview", label: "Overview", component: OverviewTab },
@@ -33,6 +34,7 @@ const tabs = [
 export default function RoadmapPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const { rule } = usePatients();
+  const { initType, initForm, setNoteForm } = useNodes();
 
   const domainNodes: string[] = [];
   const nodes: string[] = [];
@@ -97,6 +99,11 @@ export default function RoadmapPage() {
             domains={domains}
             regimens={regimens}
             variables={variables}
+            initType={initType}
+            initForm={initForm}
+            onClose={() => {
+              setNoteForm({});
+            }}
           />
         )}
       </div>

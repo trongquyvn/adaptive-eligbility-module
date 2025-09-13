@@ -84,12 +84,15 @@ function collectInputVarsFromNode(
       break;
 
     case "REGIMEN_RESOLVE":
-      if (node.constraints?.exclude_if) {
-        const excludeIf = node.constraints.exclude_if;
-        const child =
-          typeof excludeIf === "string" ? nodes[excludeIf] : excludeIf;
-        collectInputVarsFromNode(child, nodes, acc);
-      }
+      (node.constraints || []).forEach((item: any) => {
+        if (item.exclude_if) {
+          const excludeIf = item.exclude_if;
+          const child =
+            typeof excludeIf === "string" ? nodes[excludeIf] : excludeIf;
+          collectInputVarsFromNode(child, nodes, acc);
+        }
+      });
+
       break;
 
     case "IF":

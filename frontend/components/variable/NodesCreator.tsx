@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TagInput from "@/components/common/TagInput";
 import { cateList } from "@/constants";
 import { objExpandKeys } from "@/lib/common";
@@ -25,11 +25,20 @@ interface CreateNodeProps {
   domains: string[];
   regimens: string[];
   variables: string[];
+  initForm?: Record<string, any>;
+  initType?: NodeType;
+  onClose: () => void;
 }
 
 const NODE_FIELDS: Record<
   NodeType,
-  { key: string; label: string; type: string; default?: any }[]
+  {
+    key: string;
+    label: string;
+    type: string;
+    default?: any;
+    optional?: boolean;
+  }[]
 > = {
   BOOLEAN: [
     { key: "input.var", label: "Variable", type: "text" },
@@ -51,11 +60,13 @@ const NODE_FIELDS: Record<
       key: "window.max_hours_since",
       label: "Max Hours Since",
       type: "number",
+      optional: true,
     },
     {
       key: "window.min_hours_since",
       label: "Min Hours Since",
       type: "number",
+      optional: true,
     },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
@@ -72,7 +83,6 @@ const NODE_FIELDS: Record<
       key: "require_min_regimens",
       label: "Require Min Regimens",
       type: "number",
-      default: 1,
     },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
@@ -84,24 +94,41 @@ export default function CreateNode({
   domains,
   regimens,
   variables,
+  initForm,
+  initType,
+  onClose,
 }: CreateNodeProps) {
   const [open, setOpen] = useState(false);
-  const [nodeType, setNodeType] = useState<NodeType | "">("");
-  const [form, setForm] = useState<Record<string, any>>({
-    cate: "1",
-  });
+  const [nodeType, setNodeType] = useState<NodeType | "">(initType || "");
+  const [form, setForm] = useState<Record<string, any>>(
+    initForm || { cate: "1" }
+  );
+  console.log("form: ", form);
   const [domainItems, setDomainItems] = useState<
     { domain_id: string; rule: string }[]
-  >([{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
+  >(initForm?.items || [{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
   const [constraints, setConstraints] = useState<
     { regimen_id: string; exclude_if: string; reason_on_exclude: string }[]
-  >([
-    {
-      regimen_id: regimens[0] || "",
-      exclude_if: nodes[0] || "",
-      reason_on_exclude: "",
-    },
-  ]);
+  >(
+    initForm?.constraints || [
+      {
+        regimen_id: regimens[0] || "",
+        exclude_if: nodes[0] || "",
+        reason_on_exclude: "",
+      },
+    ]
+  );
+
+  useEffect(() => {
+    if (initType) {
+      if (initForm && Object.keys(initForm).length) {
+        setForm(initForm);
+      }
+      setNodeType(initType);
+      setOpen(true);
+    }
+  }, [initType]);
+
   const { rule, updateActiveRule } = usePatients();
   const { showToast } = useToast();
   const alertError = (v: string) => showToast(v, "error");
@@ -151,9 +178,10 @@ export default function CreateNode({
       }
     } else {
       const fields = NODE_FIELDS[nodeType as NodeType];
-      const missing = fields.filter(
-        (f) => !form[f.key] || form[f.key].toString().trim() === ""
-      );
+      const missing = fields.filter((f) => {
+        if (f.optional) return false;
+        return !form[f.key] || form[f.key].toString().trim() === "";
+      });
       if (missing.length > 0) {
         alertError(
           `Missing required fields: ${missing.map((m) => m.label).join(", ")}`
@@ -183,37 +211,41 @@ export default function CreateNode({
     const newNodeData = objExpandKeys(newNode);
 
     const nodes = rule?.logic?.nodes || {};
-    const check = nodes[generatedId];
-    if (check) {
+    if (nodes[generatedId] && !initForm) {
       showToast("Node already exists!", "info");
-    } else {
-      nodes[generatedId] = newNodeData;
-      const newRule = {
-        ...rule,
-        logic: {
-          ...rule?.logic,
-          nodes,
-        },
-      };
-      const result = await updateRule(rule._id, newRule);
-      if (result) {
-        updateActiveRule(result);
-        showToast("Add Node!", "success");
-      }
+    }
+
+    nodes[generatedId] = newNodeData;
+    const newRule = {
+      ...rule,
+      logic: {
+        ...rule?.logic,
+        nodes,
+      },
+    };
+    const result = await updateRule(rule._id, newRule);
+    if (result) {
+      updateActiveRule(result);
+      showToast(initForm ? "Updated Node!" : "Added Node!", "success");
     }
 
     // reset
-    setOpen(false);
-    setNodeType("");
-    setForm({ cate: "1" });
-    setDomainItems([{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
-    setConstraints([
-      {
-        regimen_id: regimens[0] || "",
-        exclude_if: nodes[0] || "",
-        reason_on_exclude: "",
-      },
-    ]);
+    if (!initForm) {
+      setOpen(false);
+      setNodeType("");
+      setForm({ cate: "1" });
+      setDomainItems([{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
+      setConstraints([
+        {
+          regimen_id: regimens[0] || "",
+          exclude_if: nodes[0] || "",
+          reason_on_exclude: "",
+        },
+      ]);
+    } else {
+      setOpen(false);
+    }
+    onClose();
   };
 
   return (
@@ -538,7 +570,10 @@ export default function CreateNode({
             {/* Actions */}
             <div className="flex justify-end gap-2 mt-4">
               <button
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  onClose();
+                  setOpen(false);
+                }}
                 className="px-3 py-1 border rounded"
               >
                 Cancel
