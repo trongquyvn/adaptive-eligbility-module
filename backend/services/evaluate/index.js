@@ -335,8 +335,8 @@ async function evaluate(patientData, ruleDoc, mode = "flow") {
   return {
     ...coreResult,
     evaluated_at: new Date().toISOString(),
-    rules_id: ruleDoc.trial.id,
-    rules_version: ruleDoc.trial.version,
+    rule_id: ruleDoc.trial.id,
+    rule_version: ruleDoc.trial.version,
   };
 }
 

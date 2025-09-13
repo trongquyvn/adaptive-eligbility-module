@@ -5,12 +5,15 @@ const EvaluationLogSchema = new mongoose.Schema({
   evaluated_at: { type: String },
   registry_code: { type: String },
   status: { type: String },
-  reasons: [{ type: String }],
+  key_reasons: [{ type: String }],
+  eligible_domains: [{ type: String }],
+  eligible_regimens: [{ type: String }],
+  data_needed: [{ type: String }],
   rule_id: { type: String, default: "" },
   rule_version: { type: String, default: "v1.0" },
-  timestamp: { type: Date, default: Date.now },
-  data: mongoose.Schema.Types.Mixed,
+  patientData: mongoose.Schema.Types.Mixed,
   rule: mongoose.Schema.Types.Mixed,
+  timestamp: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("EvaluationLog", EvaluationLogSchema);

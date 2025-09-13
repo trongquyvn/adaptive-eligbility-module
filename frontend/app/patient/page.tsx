@@ -48,7 +48,7 @@ export default function PatientPage() {
     isDraft: boolean
   ) => {
     // Generate patient ID
-    const patientId = `#${Math.floor(Math.random() * 10000)
+    const patientId = `${Math.floor(Math.random() * 10000)
       .toString()
       .padStart(3, "0")}${String.fromCharCode(
       65 + Math.floor(Math.random() * 26)

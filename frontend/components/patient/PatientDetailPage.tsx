@@ -10,6 +10,7 @@ import CreatePatientDialog from "./CreatePatientDialog";
 import { collectInputVars, flattenObj, isoToLocalInput } from "@/lib/common";
 import { updatePatient, runPatientCheck } from "@/lib/patient";
 import PatientValidate from "./PatientValidate";
+import Link from "next/link";
 
 function EditButton({ onClick }: { onClick: () => void }) {
   return (
@@ -76,6 +77,7 @@ export default function PatientDetailPage({ patient }: any) {
       jurisdiction,
       patient_id,
       data,
+      now: new Date().toISOString(),
     };
     const result = await runPatientCheck(runData);
 
@@ -199,8 +201,8 @@ export default function PatientDetailPage({ patient }: any) {
               Patient information and eligibility results
             </p>
           </div>
-          <a
-            href="#"
+          <Link
+            href={`/patient/logs/${patient_id}`}
             className="text-sm text-purple-600 hover:underline flex items-center gap-2"
           >
             <svg
@@ -217,7 +219,7 @@ export default function PatientDetailPage({ patient }: any) {
               />
             </svg>
             History Log
-          </a>
+          </Link>
         </div>
 
         {/* Patient Details Card */}

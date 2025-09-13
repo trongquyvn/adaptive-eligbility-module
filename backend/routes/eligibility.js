@@ -67,6 +67,15 @@ router.post("/check", async (req, res) => {
     // Run evaluate (overrides handled inside)
     // const result = await evaluate(patient, testRule, mode || "flow");
     const result = await evaluate(patient, rule.toObject(), mode || "flow");
+
+    const Log = new EvaluationLog({
+      patient_id: patient_id,
+      patientData: patient,
+      rule: rule.toObject(),
+      ...result,
+    });
+    await Log.save();
+
     res.json(result);
   } catch (err) {
     console.error("Error in /check:", err);
@@ -83,7 +92,7 @@ router.get("/logs", async (req, res) => {
 // ✅ API: Get logs by patientId
 router.get("/logs/:patientId", async (req, res) => {
   const { patientId } = req.params;
-  const logs = await EvaluationLog.find({ patientId }).sort({ timestamp: -1 });
+  const logs = await EvaluationLog.find({ patient_id }).sort({ timestamp: -1 });
   if (logs.length === 0) {
     return res
       .status(404)
