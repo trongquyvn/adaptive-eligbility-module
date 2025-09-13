@@ -110,6 +110,18 @@ export default function CreatePatientDialog({
         </div>
 
         <div className="space-y-4 overflow-y-auto mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">ID *</label>
+            <div className="">
+              <input
+                type="text"
+                value={formData["id"] || ''}
+                onChange={(e) => handleChange("id", e.target.value)}
+                className="w-full pl-2 pr-3 py-2 border rounded-md"
+              />
+            </div>
+          </div>
+
           <div className="">
             <SingleTagSelect
               label="Jurisdiction"

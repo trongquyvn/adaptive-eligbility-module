@@ -68,7 +68,7 @@ export default function PatientLogModal({
                     className={
                       log.isOnPass
                         ? "text-green-600 font-medium"
-                        : "text-red-600 font-medium"
+                        : "text-purple-600 font-medium"
                     }
                   >
                     {log.status}

@@ -42,6 +42,7 @@ function resolveVariable(varDef, patientData, nodeType) {
 
 // ------------------ EVALUATE NODE ------------------
 function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
+  node.allow_unknown = true;
   if (!node) return true;
   const t = node.type;
 

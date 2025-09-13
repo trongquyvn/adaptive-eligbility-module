@@ -128,9 +128,11 @@ export default function PatientValidate({
                   <span className="text-sm font-medium text-gray-700">
                     Reason:
                   </span>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {eligibilityRule?.key_reasons}
-                  </p>
+                  <ul className="list-disc list-inside text-sm text-gray-700">
+                    {eligibilityRule.key_reasons?.map((r: any, idx: number) => (
+                      <li key={idx}>{r}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </>

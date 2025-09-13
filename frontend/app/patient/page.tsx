@@ -47,17 +47,10 @@ export default function PatientPage() {
     patientData: any,
     isDraft: boolean
   ) => {
-    // Generate patient ID
-    const patientId = `${Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(3, "0")}${String.fromCharCode(
-      65 + Math.floor(Math.random() * 26)
-    )}`;
-
     const jurisdiction = patientData.jurisdiction;
     delete patientData.jurisdiction;
     const newPatient: any = {
-      patient_id: patientId,
+      patient_id: patientData.id,
       jurisdiction,
       data: {
         [activeDataKey]: patientData,
