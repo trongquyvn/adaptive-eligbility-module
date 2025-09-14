@@ -1,10 +1,7 @@
 import { API_CALL_URL } from "@/constants";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET() {
   try {
     const api = `${API_CALL_URL}/eligibility/logs/`;
     const res = await fetch(api, {
