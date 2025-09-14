@@ -17,7 +17,7 @@ export default function NodePopup({
   open,
   onClose: onInitClose,
 }: NodePopupProps) {
-  const { rule, updateActiveRule } = usePatients();
+  const { rule, updateActiveRule, getVariableInfo } = usePatients();
   const { showToast } = useToast();
   const nodes = rule?.logic?.nodes || {};
   const nodeOptions = Object.keys(nodes);
@@ -252,7 +252,7 @@ export default function NodePopup({
                     </p>
                     <p>
                       <span className="font-semibold">Var:</span>{" "}
-                      {nodeData?.input?.var}
+                      {getVariableInfo(nodeData?.input?.var)?.name}
                     </p>
                     {nodeData.type === "COMPARE" && (
                       <>

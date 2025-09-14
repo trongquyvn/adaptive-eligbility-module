@@ -97,18 +97,20 @@ export default function PatientValidate({
             Eligibility Result
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Status:</span>
+            <span className="text-sm font-medium text-gray-700">
+              Outcome status:
+            </span>
             <span className={`px-3 py-1 rounded-full ${getStyles()}`}>
               {eligibilityRule?.status || "Pending"}
             </span>
           </div>
-
+          
           {eligibilityRule && eligibilityRule?.status && (
             <div className={view === "v2" ? "flex gap-8" : ""}>
               <div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Registry code
+                    Registry code:
                   </span>
                   <span className="text-sm text-gray-600 ml-2">
                     {eligibilityRule?.registry_code}
@@ -116,7 +118,7 @@ export default function PatientValidate({
                 </div>
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    Date Screened:
+                    Date screened:
                   </span>
                   <span className="text-sm text-gray-600 ml-2">
                     {formatISODate(eligibilityRule?.evaluated_at)}

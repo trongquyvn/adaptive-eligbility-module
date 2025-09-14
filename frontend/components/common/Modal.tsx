@@ -14,23 +14,23 @@ export default function Modal({ isOpen, onClose, children, title }: ModalProps) 
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close modal on Escape key
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
+  // useEffect(() => {
+  //   const handleEscape = (event: KeyboardEvent) => {
+  //     if (event.key === "Escape") {
+  //       onClose();
+  //     }
+  //   };
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      // Focus the modal when it opens
-      modalRef.current?.focus();
-    }
+  //   if (isOpen) {
+  //     document.addEventListener("keydown", handleEscape);
+  //     // Focus the modal when it opens
+  //     modalRef.current?.focus();
+  //   }
 
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen, onClose]);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleEscape);
+  //   };
+  // }, [isOpen, onClose]);
 
   // Close modal on outside click
   useEffect(() => {

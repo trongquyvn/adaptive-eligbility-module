@@ -17,18 +17,27 @@ interface NodesTableProps {
   canEdit?: boolean;
 }
 
-function renderData(node: any) {
+function renderData(node: any, getVariableInfo: any, getNodeInfo: any) {
   switch (node?.type) {
     case "BOOLEAN":
     case "NOT":
     case "DATABASE":
-      return <div>Var: {node?.input?.var}</div>;
+      return <div>Var: {getVariableInfo(node?.input?.var)?.name}</div>;
 
     case "COMPARE":
       return (
         <div>
-          <div>Left: {node?.input?.var}</div>
+          <div>Left: {getVariableInfo(node?.input?.var)?.name}</div>
           <div>Operator: {node?.operator}</div>
+          <div>Right: {node?.right?.const}</div>
+        </div>
+      );
+
+    case "DATA":
+      return (
+        <div>
+          <div>Left: {getVariableInfo(node?.input?.var)?.name}</div>
+          <div>Operator: =</div>
           <div>Right: {node?.right?.const}</div>
         </div>
       );
@@ -38,14 +47,16 @@ function renderData(node: any) {
       return (
         <div>
           Children:{" "}
-          <span className="font-semibold">{node?.children?.join(", ")}</span>
+          <span className="font-semibold">
+            {node?.children?.map((e: any) => getNodeInfo(e)?.name).join(", ")}
+          </span>
         </div>
       );
 
     case "TIME_WINDOW":
       return (
         <div>
-          <div>Var: {node?.input?.var}</div>
+          <div>Var: {getVariableInfo(node?.input?.var)?.name}</div>
           <div>Max hours: {node?.window?.max_hours_since}</div>
           <div>Min hours: {node?.window?.min_hours_since}</div>
         </div>
@@ -54,9 +65,9 @@ function renderData(node: any) {
     case "IF":
       return (
         <div>
-          <div>Condition: {node?.cond}</div>
-          <div>Then: {node?.then}</div>
-          <div>Else: {node?.else}</div>
+          <div>Condition: {getNodeInfo(node?.cond)?.name}</div>
+          <div>Then: {getNodeInfo(node?.then)?.name}</div>
+          <div>Else: {getNodeInfo(node?.else)?.name}</div>
         </div>
       );
 
@@ -73,7 +84,10 @@ function renderData(node: any) {
                     <span className="font-semibold">{item?.domain_id}</span>
                   </div>
                   <div className="inline">
-                    Rule: <span className="font-semibold">{item?.rule}</span>
+                    Rule:{" "}
+                    <span className="font-semibold">
+                      {getNodeInfo(item?.rule)?.name}
+                    </span>
                   </div>
                 </div>
               </li>
@@ -85,7 +99,9 @@ function renderData(node: any) {
     case "REGIMEN_RESOLVE":
       return (
         <div className="space-y-1">
-          <div>Input = {node?.input?.eligible_domains_ref}</div>
+          <div>
+            Input = {getNodeInfo(node?.input?.eligible_domains_ref)?.name}
+          </div>
           <div>Require min = {node?.require_min_regimens || ""}</div>
           <div>
             Constraints:
@@ -99,7 +115,9 @@ function renderData(node: any) {
                     </div>
                     <div className="inline">
                       Exclude If:{" "}
-                      <span className="font-semibold">{c?.exclude_if}</span>
+                      <span className="font-semibold">
+                        {getNodeInfo(c?.exclude_if)?.name}
+                      </span>
                     </div>
                   </div>
                 </li>
@@ -115,7 +133,8 @@ function renderData(node: any) {
 }
 
 export default function NodesTable({ cate, canEdit }: NodesTableProps) {
-  const { rule, updateActiveRule } = usePatients();
+  const { rule, updateActiveRule, getVariableInfo, getNodeInfo } =
+    usePatients();
   const { showToast } = useToast();
 
   const nodes = rule?.logic?.nodes || {};
@@ -220,7 +239,9 @@ export default function NodesTable({ cate, canEdit }: NodesTableProps) {
               <td className="py-3">
                 {node?.cate ? cateMap[node?.cate] || node?.cate : "-"}
               </td>
-              <td className="py-3">{renderData(node)}</td>
+              <td className="py-3">
+                {renderData(node, getVariableInfo, getNodeInfo)}
+              </td>
               {canEdit && (
                 <td className="py-3 flex gap-4">
                   <Pencil

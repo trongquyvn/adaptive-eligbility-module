@@ -60,6 +60,7 @@ const RuleSchema = new mongoose.Schema(
     variables: [VariableSchema],
     domain_catalog: [DomainSchema],
     regimen_catalog: [RegimenSchema],
+    overrides: [mongoose.Schema.Types.Mixed],
     logic: {
       root: String,
       nodes: mongoose.Schema.Types.Mixed,

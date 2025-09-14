@@ -1,0 +1,317 @@
+{
+  "trial": {
+    "id": "remap-cap",
+    "version": "v2.5",
+    "jurisdiction": [
+      "AU",
+      "NZ",
+      "UK"
+    ],
+    "effective_from": "2025-06-01T00:00:00.000Z"
+  },
+  "metadata": {
+    "title": "REMAP-CAP Eligibility",
+    "description": "Platform → CAP → Time Windows → Consent → Domain/Regimen resolution",
+    "author": "Empiric",
+    "created_at": "2025-06-26T00:00:00.000Z"
+  },
+  "logic": {
+    "nodes": {
+      "database_checking": {
+        "name": "Are they already in the database?",
+        "cate": "1",
+        "type": "DATABASE",
+        "input": {
+          "var": "database"
+        },
+        "reason_on_fail": "Patient has not in database"
+      },
+      "age_should_be_less_than_18": {
+        "name": "Age should be less than 18",
+        "cate": "1",
+        "type": "COMPARE",
+        "input": {
+          "var": "age"
+        },
+        "reason_on_fail": "Age should be less than 18 Error",
+        "operator": "<",
+        "right": {
+          "const": "18"
+        }
+      },
+      "time_support": {
+        "name": "Time support",
+        "cate": "2",
+        "type": "TIME_WINDOW",
+        "input": {
+          "var": "window.time.support"
+        },
+        "window": {
+          "max_hours_since": "24"
+        },
+        "reason_on_fail": "Time support error"
+      },
+      "domain_map_rule": {
+        "name": "Domain map rule",
+        "cate": "3",
+        "type": "BOOLEAN",
+        "input": {
+          "var": "antibiotics.var"
+        },
+        "reason_on_fail": "Domain map rule error"
+      },
+      "domain_map": {
+        "name": "Domain map",
+        "cate": "3",
+        "type": "DOMAIN_MAP",
+        "items": [
+          {
+            "domain_id": "antibiotics",
+            "rule": "domain_map_rule"
+          }
+        ]
+      },
+      "regimen_rule_a": {
+        "name": "Regimen rule a",
+        "cate": "4",
+        "type": "BOOLEAN",
+        "input": {
+          "var": "regimen.abx_a"
+        },
+        "reason_on_fail": "Regimen rule a error"
+      },
+      "regimen_rule_b": {
+        "name": "regimen rule b",
+        "cate": "4",
+        "type": "BOOLEAN",
+        "input": {
+          "var": "regimen.abx_b"
+        },
+        "reason_on_fail": "regimen rule b error"
+      },
+      "regimen_map": {
+        "name": "Regimen map",
+        "cate": "4",
+        "type": "REGIMEN_RESOLVE",
+        "input": {
+          "eligible_domains_ref": "domain_map"
+        },
+        "require_min_regimens": 1,
+        "reason_on_fail": "Regimen map error",
+        "constraints": [
+          {
+            "regimen_id": "abx_a",
+            "exclude_if": "regimen_rule_a",
+            "reason_on_exclude": "Regimen rule a error"
+          },
+          {
+            "regimen_id": "abx_b",
+            "exclude_if": "regimen_rule_b",
+            "reason_on_exclude": "Regimen rule b error"
+          }
+        ]
+      },
+      "consent_status": {
+        "name": "Consent status",
+        "cate": "5",
+        "type": "BOOLEAN",
+        "input": {
+          "var": "consent.status"
+        },
+        "reason_on_fail": "Consent status error"
+      },
+      "gender_male": {
+        "name": "Gender male",
+        "cate": "2",
+        "type": "DATA",
+        "input": {
+          "var": "gender"
+        },
+        "right": {
+          "const": "male"
+        },
+        "reason_on_fail": "Gender male error"
+      },
+      "all_pass": {
+        "name": "ALL PASS",
+        "cate": "2",
+        "type": "ANY",
+        "children": [
+          "age_should_be_less_than_18",
+          "time_support"
+        ]
+      },
+      "consent_required": {
+        "name": "Consent required",
+        "cate": "1",
+        "type": "BOOLEAN",
+        "input": {
+          "var": "consent.required"
+        },
+        "reason_on_fail": "Consent required error"
+      }
+    },
+    "flow": [
+      {
+        "on_fail": {
+          "next": ""
+        },
+        "on_pass": {
+          "next": "regimen_map"
+        },
+        "id": "domain_map",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "outcome": "Register",
+          "code": "002"
+        },
+        "on_pass": {
+          "next": "consent_status"
+        },
+        "id": "regimen_map",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "outcome": "Register",
+          "code": "101"
+        },
+        "on_pass": {
+          "next": "domain_map"
+        },
+        "id": "time_support",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "outcome": "Register",
+          "code": "003"
+        },
+        "on_pass": {
+          "outcome": "Randomization",
+          "code": "999"
+        },
+        "id": "consent_status",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "next": "gender_male"
+        },
+        "on_pass": {
+          "next": "time_support"
+        },
+        "id": "age_should_be_less_than_18",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "outcome": "No Register",
+          "code": "No002"
+        },
+        "on_pass": {
+          "outcome": "No Register",
+          "code": "No001"
+        },
+        "id": "gender_male",
+        "start": false
+      },
+      {
+        "on_fail": {
+          "next": "consent_required"
+        },
+        "on_pass": {
+          "next": "age_should_be_less_than_18"
+        },
+        "id": "database_checking",
+        "start": true
+      },
+      {
+        "on_fail": {
+          "outcome": "No registry",
+          "code": ""
+        },
+        "on_pass": {
+          "outcome": "No registry",
+          "code": ""
+        },
+        "id": "consent_required",
+        "start": false
+      }
+    ]
+  },
+  "_id": "68c461782660c3d4d3143acf",
+  "variables": [
+    {
+      "id": "antibiotics.var",
+      "name": "Antibiotics Var",
+      "type": "BOOLEAN",
+      "codes": []
+    },
+    {
+      "id": "regimen.abx_a",
+      "name": "Regimen abx_a",
+      "type": "BOOLEAN",
+      "codes": []
+    },
+    {
+      "id": "age",
+      "name": "age",
+      "type": "NUMBER",
+      "codes": []
+    },
+    {
+      "id": "window.time.support",
+      "name": "Window time support",
+      "type": "TIME_WINDOW",
+      "codes": []
+    },
+    {
+      "id": "regimen.abx_b",
+      "name": "Regimen abx_b",
+      "type": "BOOLEAN",
+      "codes": []
+    },
+    {
+      "id": "consent.status",
+      "name": "Consent status",
+      "type": "BOOLEAN",
+      "codes": []
+    },
+    {
+      "id": "gender",
+      "name": "Gender",
+      "type": "DATA",
+      "codes": []
+    },
+    {
+      "id": "consent.required",
+      "name": "Consent required",
+      "type": "BOOLEAN",
+      "codes": []
+    }
+  ],
+  "domain_catalog": [
+    {
+      "id": "antibiotics",
+      "active": true
+    }
+  ],
+  "regimen_catalog": [
+    {
+      "id": "abx_a",
+      "domain_id": "antibiotics",
+      "label": "abx_a label"
+    },
+    {
+      "id": "abx_b",
+      "domain_id": "antibiotics",
+      "label": "abx_b label"
+    }
+  ],
+  "createdAt": "2025-09-12T18:07:52.949Z",
+  "updatedAt": "2025-09-14T08:22:06.023Z",
+  "__v": 0
+}

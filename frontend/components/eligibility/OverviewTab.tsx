@@ -3,6 +3,7 @@
 import { usePatients } from "@/context/PatientContext";
 import PatientWorkflowFlow from "@/components/workflow/PatientWorkflowFlow";
 import TabsMenu from "@/components/common/TabsMenu";
+import OverrideButton from "@/components/variable/OverrideButton";
 
 import { Edge, MarkerType, Node } from "reactflow";
 import getLayoutElements from "@/lib/elk";
@@ -328,7 +329,22 @@ const JSONFile = () => {
 };
 
 export default function OverviewTab() {
-  const { rule } = usePatients();
+  const { rule, updateActiveRule } = usePatients();
+  const { showToast } = useToast();
+  const overrides = rule?.overrides || [];
+
+  const onSaveOverride = async (overrides: any) => {
+    const newRule = {
+      ...rule,
+      overrides,
+    };
+
+    const result = await updateRule(rule._id, newRule);
+    if (result) {
+      updateActiveRule(result);
+      showToast("Override!", "success");
+    }
+  };
 
   return (
     <div className="bg-white p-5">
@@ -340,7 +356,8 @@ export default function OverviewTab() {
             eiusmod tempor incididunt ut labore et dolore
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-4">
+          <OverrideButton onSave={onSaveOverride} initForm={overrides} />
           <button
             className="px-4 py-2 rounded-lg border"
             onClick={() => {

@@ -50,7 +50,7 @@ function evaluateNode(node, patientData, ruleDoc, ctx, shouldAddError = true) {
     if (reason && shouldAddError) ctx.key_reasons.push(reason);
     return false;
   };
-  
+
   const pending = (id) => {
     // ctx.hasPending = true;
     ctx.data_needed.push(id);
@@ -285,25 +285,39 @@ function evaluateByRoot(patientData, ruleDoc) {
 
 // ------------------ FLOW MODE ------------------
 function evaluateByFlow(patientData, ruleDoc) {
+  const { flow, nodes } = ruleDoc.logic;
   const ctx = { key_reasons: [], data_needed: [], hasPending: false };
-  let currentStep = ruleDoc.logic.flow[0];
+  let currentStep = flow.find((e) => e.start);
+  if (!currentStep) {
+    return {
+      status: "Fail to set the diagram",
+      registry_code: '',
+      eligible_domains: [],
+      eligible_regimens: [],
+      key_reasons: [],
+      data_needed: [],
+      cate: "1",
+      isOnPass: false,
+    };
+  }
+
   let finalOutcome = null;
   let finalCode = null;
 
-  const maxStep = ruleDoc.logic.flow.length;
+  const maxStep = flow.length;
   let count = 0;
   let cate = "1";
   let isOnPass = true;
   while (currentStep && !finalOutcome) {
     count++;
-    const node = ruleDoc.logic.nodes[currentStep.id];
+    const node = nodes[currentStep.id];
     cate = node?.cate;
     const result = evaluateNode(node, patientData, ruleDoc, ctx);
     const branch = result ? currentStep.on_pass : currentStep.on_fail;
 
     if (branch) {
       if (branch.next) {
-        currentStep = ruleDoc.logic.flow.find((f) => f.id === branch.next);
+        currentStep = flow.find((f) => f.id === branch.next);
       } else if (branch.outcome) {
         if (!result) isOnPass = false;
         finalOutcome = branch.outcome;

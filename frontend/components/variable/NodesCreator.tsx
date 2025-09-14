@@ -138,7 +138,8 @@ export default function CreateNode({
     }
   }, [initType]);
 
-  const { rule, updateActiveRule } = usePatients();
+  const { rule, updateActiveRule, getNodeInfo, getVariableInfo } =
+    usePatients();
   const { showToast } = useToast();
   const alertError = (v: string) => showToast(v, "error");
 
@@ -339,7 +340,7 @@ export default function CreateNode({
                         <option key="null">Select variable</option>
                         {variables.map((n) => (
                           <option key={n} value={n}>
-                            {n}
+                            {getVariableInfo(n)?.name}
                           </option>
                         ))}
                       </select>
@@ -394,7 +395,7 @@ export default function CreateNode({
                       <option key="null">Select node</option>
                       {nodes.map((n) => (
                         <option key={n} value={n}>
-                          {n}
+                          {getNodeInfo(n)?.name}
                         </option>
                       ))}
                     </select>
@@ -410,6 +411,12 @@ export default function CreateNode({
                 value={form.children || []}
                 onChange={(val) => handleChange("children", val)}
                 options={nodes}
+                optNames={Object.fromEntries(
+                  nodes.map((k) => {
+                    const name = getNodeInfo(k)?.name;
+                    return [k, name];
+                  })
+                )}
                 placeholder="node id..."
                 color="blue"
               />
@@ -454,7 +461,7 @@ export default function CreateNode({
                         <option value="">Select rule node</option>
                         {nodes.map((n) => (
                           <option key={n} value={n}>
-                            {n}
+                            {getNodeInfo(n)?.name}
                           </option>
                         ))}
                       </select>
@@ -490,7 +497,7 @@ export default function CreateNode({
                     <option key="null">Select domain</option>
                     {domainNodes.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {getNodeInfo(r)?.name}
                       </option>
                     ))}
                   </select>
@@ -546,7 +553,7 @@ export default function CreateNode({
                         <option key="null">Select node</option>
                         {nodes.map((n) => (
                           <option key={n} value={n}>
-                            {n}
+                            {getNodeInfo(n)?.name}
                           </option>
                         ))}
                       </select>

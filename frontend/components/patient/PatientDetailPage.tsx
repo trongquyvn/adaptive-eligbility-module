@@ -203,13 +203,14 @@ export default function PatientDetailPage({ patient }: any) {
           </button>
         )}
       </div>
-      <div className="flex justify-between items-start mb-4 mt-4">
+      <div className="flex gap-8 items-start mb-4 mt-4">
         <div className="text-lg font-semibold text-gray-900">
-          {patient?.patient_id}
-          <span className="text-xs">
-            {" "}
+          <div>
+            {patient?.patient_id} - {jurisdiction}
+          </div>
+          <div className="text-xs">
             {rule?.trial?.id} - {rule?.trial?.version}
-          </span>
+          </div>
         </div>
       </div>
       <div className="bg-white shadow rounded-lg p-5">

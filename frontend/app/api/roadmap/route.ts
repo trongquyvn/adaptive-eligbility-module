@@ -24,6 +24,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     body.logic = {
+      variables: [],
       flow: [],
       nodes: {
         database_checking: {

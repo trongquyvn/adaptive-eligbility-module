@@ -21,6 +21,8 @@ interface PatientContextProps {
   updateActiveRule: (e: Record<string, any>) => void;
   addPatient: (e: Record<string, any>) => void;
   updateActivePatient: (e: Record<string, any>) => void;
+  getVariableInfo: (e: string) => any;
+  getNodeInfo: (e: string) => any;
   activeDataKey: string;
 }
 
@@ -35,6 +37,8 @@ const PatientContext = createContext<PatientContextProps>({
   setActiveRule: () => {},
   updateActiveRule: () => {},
   updateActivePatient: () => {},
+  getVariableInfo: () => {},
+  getNodeInfo: () => {},
   activeRule: 0,
   activeDataKey: "",
 });
@@ -64,7 +68,11 @@ export function PatientProvider({
   });
 
   const [ruleUpdate, setRuleUpdate] = useState(0);
-  const rule = listRules[activeRule] || {};
+  const rule = listRules[activeRule] || {
+    trial: {},
+    variables: [],
+    logic: { flow: [], nodes: {} },
+  };
   const activeDataKey = rule?.trial?.id + "_" + rule?.trial?.version;
 
   useEffect(() => {
@@ -93,6 +101,14 @@ export function PatientProvider({
     setListPatients(newList);
   };
 
+  const getVariableInfo = (v: string) => {
+    return rule?.variables?.find((e: any) => e.id === v) || {};
+  };
+
+  const getNodeInfo = (node: string) => {
+    return rule?.logic?.nodes?.[node] || {};
+  };
+
   return (
     <PatientContext.Provider
       value={{
@@ -113,6 +129,8 @@ export function PatientProvider({
         addPatient,
         updateActivePatient,
         logs,
+        getVariableInfo,
+        getNodeInfo,
       }}
     >
       {children}

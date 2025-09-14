@@ -88,7 +88,7 @@ export default function PatientTable({ patients }: PatientTableProps) {
           <tr className="text-gray-500">
             <th className="py-3">Patient ID</th>
             <th className="py-3">Jurisdiction</th>
-            <th className="py-3">Created at</th>
+            <th className="py-3">Date screened</th>
             <th className="py-3">Status</th>
             <th className="py-3">Actions</th>
           </tr>

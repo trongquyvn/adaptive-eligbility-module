@@ -53,7 +53,7 @@ export default function FilterPopup({
           <div className="bg-white rounded-xl shadow-lg w-96 p-6 relative">
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Filters (3)</h2>
+              <h2 className="text-lg font-semibold">Filters ({count})</h2>
               <button onClick={() => setOpen(false)}>
                 <X className="w-5 h-5 text-gray-500" />
               </button>
