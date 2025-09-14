@@ -12,12 +12,31 @@ type NodePopupProps = {
   onClose: () => void;
 };
 
+function filterFlow(flow: any[]) {
+  const referenced = new Set();
+  flow.forEach((step: any) => {
+    ["on_pass", "on_fail"].forEach((branchKey) => {
+      const branch = step[branchKey];
+      if (branch && branch.next) {
+        referenced.add(branch.next);
+      }
+    });
+  });
+
+  const filteredFlow = flow.filter(
+    (step: any) => step.start === true || referenced.has(step.id)
+  );
+
+  return filteredFlow;
+}
+
 export default function NodePopup({
   nodeId,
   open,
   onClose: onInitClose,
 }: NodePopupProps) {
-  const { rule, updateActiveRule, getVariableInfo } = usePatients();
+  const { rule, updateActiveRule, getVariableInfo, getNodeInfo } =
+    usePatients();
   const { showToast } = useToast();
   const nodes = rule?.logic?.nodes || {};
   const nodeOptions = Object.keys(nodes);
@@ -28,6 +47,7 @@ export default function NodePopup({
   const [editMode, setEditMode] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const [updateState, setUpdateState] = useState({ on_pass: "", on_fail: "" });
   // State form
   const [passType, setPassType] = useState<"next" | "outcome">("next");
   const [onPassNext, setOnPassNext] = useState("");
@@ -47,9 +67,12 @@ export default function NodePopup({
       const flowStep = rule?.logic?.flow?.find((f: any) => f.start) || {};
       setOnStartCode(flowStep.id);
     } else {
-      console.log("flowStep: ", flowStep);
-
       setOnPassNext(flowStep?.on_pass?.next || "");
+      setUpdateState((prev) => ({
+        ...prev,
+        on_pass: flowStep?.on_pass?.next || "",
+      }));
+
       if (flowStep?.on_pass?.next) {
         setPassType("next");
       } else {
@@ -59,6 +82,11 @@ export default function NodePopup({
       setOnPassCode(flowStep?.on_pass?.code || "");
 
       setOnFailNext(flowStep?.on_fail?.next || "");
+      setUpdateState((prev) => ({
+        ...prev,
+        on_fail: flowStep?.on_fail?.next || "",
+      }));
+
       if (flowStep?.on_fail?.next) {
         setFailType("next");
       } else {
@@ -105,8 +133,32 @@ export default function NodePopup({
     const newFlow = flow.filter((e: any) => e.id !== nodeId);
     newFlow.push(newNode);
 
+    if (passType === "next" && onPassNext !== updateState?.on_pass) {
+      const nextNodeData = flow.find((e: any) => e.id === onPassNext);
+      const oldNodeData = flow.find((e: any) => e.id === updateState?.on_pass);
+      if (!nextNodeData) {
+        newFlow.push({
+          ...oldNodeData,
+          id: onPassNext,
+        });
+      }
+    }
+
+    if (failType === "next" && onFailNext !== updateState?.on_fail) {
+      const nextNodeData = flow.find((e: any) => e.id === onFailNext);
+      const oldNodeData = flow.find((e: any) => e.id === updateState?.on_fail);
+      if (!nextNodeData) {
+        newFlow.push({
+          ...oldNodeData,
+          id: onFailNext,
+        });
+      }
+    }
+
+    const updateFlow = filterFlow(newFlow);
+
     const newRule = { ...rule };
-    newRule.logic.flow = newFlow;
+    newRule.logic.flow = updateFlow;
 
     const result = await updateRule(rule._id, newRule);
     if (result) {
@@ -250,10 +302,56 @@ export default function NodePopup({
                       <span className="font-semibold">Type:</span>{" "}
                       {nodeData.type}
                     </p>
-                    <p>
-                      <span className="font-semibold">Var:</span>{" "}
-                      {getVariableInfo(nodeData?.input?.var)?.name}
-                    </p>
+                    {Boolean(nodeData?.input?.var) && (
+                      <p>
+                        <span className="font-semibold">Var:</span>{" "}
+                        {getVariableInfo(nodeData?.input?.var)?.name}
+                      </p>
+                    )}
+                    {nodeData.type === "DOMAIN_MAP" && (
+                      <>
+                        {nodeData?.items.map((e: any, i: number) => (
+                          <div key={i}>
+                            <span>
+                              <span className="font-semibold">Domain Id:</span>{" "}
+                              {e?.domain_id}
+                            </span>
+                            &nbsp;-&nbsp;
+                            <span>
+                              <span className="font-semibold">Rule:</span>{" "}
+                              {getNodeInfo(e?.rule)?.name}
+                            </span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {nodeData.type === "REGIMEN_RESOLVE" && (
+                      <>
+                        <p>
+                          <span className="font-semibold">Input:</span>{" "}
+                          {nodeData?.input?.eligible_domains_ref}
+                        </p>
+                        {nodeData?.constraints.map((e: any, i: number) => (
+                          <div key={i}>
+                            <span>
+                              <span className="font-semibold">Regimen:</span>{" "}
+                              {e?.regimen_id}
+                            </span>
+                            &nbsp;-&nbsp;
+                            <span>
+                              <span className="font-semibold">Exclude if:</span>{" "}
+                              {getNodeInfo(e?.exclude_if)?.name}
+                            </span>
+                          </div>
+                        ))}
+                        <p>
+                          <span className="font-semibold">
+                            Require min regimens:
+                          </span>{" "}
+                          {nodeData?.require_min_regimens}
+                        </p>
+                      </>
+                    )}
                     {nodeData.type === "COMPARE" && (
                       <>
                         <p>
@@ -261,7 +359,7 @@ export default function NodePopup({
                           {nodeData?.operator}
                         </p>
                         <p>
-                          <span className="font-semibold">Var:</span>{" "}
+                          <span className="font-semibold">Const:</span>{" "}
                           {nodeData?.right?.const}
                         </p>
                       </>
@@ -278,6 +376,17 @@ export default function NodePopup({
                         </p>
                       </>
                     )}
+
+                    {nodeData.type === "ALL" ||
+                      (nodeData.type === "ANY" && (
+                        <p>
+                          <span className="font-semibold">
+                            {nodeData?.children
+                              ?.map((e: any) => getNodeInfo(e)?.name)
+                              .join(", ")}
+                          </span>
+                        </p>
+                      ))}
                   </div>
 
                   {!editMode ? (

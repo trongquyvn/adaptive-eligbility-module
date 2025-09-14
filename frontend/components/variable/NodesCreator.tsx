@@ -213,7 +213,7 @@ export default function CreateNode({
     } else if (nodeType === "REGIMEN_RESOLVE") {
       newNode["input.eligible_domains_ref"] =
         form["input.eligible_domains_ref"];
-      newNode.require_min_regimens = form.require_min_regimens || 1;
+      newNode.require_min_regimens = form.require_min_regimens || 0;
       newNode.reason_on_fail = form.reason_on_fail;
       newNode.constraints = constraints;
     } else {

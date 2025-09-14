@@ -36,7 +36,6 @@ export default function RoadmapPage() {
   const { rule } = usePatients();
   const { initType, initForm, setNoteForm, initVariableForm, setVariableForm } =
     useNodes();
-  console.log("initVariableForm: ", initVariableForm);
 
   const domainNodes: string[] = [];
   const nodes: string[] = [];
