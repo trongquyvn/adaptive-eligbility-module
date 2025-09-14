@@ -48,7 +48,20 @@ export default function CreatePatientDialog({
 
   useEffect(() => {
     if (isOpen) {
-      setFormData(initForm);
+      const updateForm = { ...initForm };
+      const keys = Object.keys(groups);
+      keys.forEach((k) => {
+        if (groups[k].length !== 1) {
+          groups[k].forEach((e) => {
+            if (initForm[e.id]) {
+              if (!updateForm[k]) updateForm[k] = [];
+              updateForm[k].push(e.name);
+              delete updateForm[e.id];
+            }
+          });
+        }
+      });
+      setFormData(updateForm);
     }
   }, [isOpen]);
 
@@ -88,6 +101,7 @@ export default function CreatePatientDialog({
     }
 
     const newNodeData = objExpandKeys(form) as any;
+
     if (runNow) {
       setIsRunning(true);
       setIsRunView(true);

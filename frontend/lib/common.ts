@@ -11,21 +11,43 @@ export function exportJsonToFile(data: unknown, filename = "data.json") {
   URL.revokeObjectURL(url);
 }
 
-export function objExpandKeys(obj: Record<any, any>) {
-  const result = {};
+export function objExpandKeys(obj: Record<string, any>) {
+  const result: Record<string, any> = {};
 
-  for (const key in obj) {
+  for (const key of Object.keys(obj)) {
     const parts = key.split(".");
-    let current: Record<any, any> = result;
+    let current = result;
 
-    parts.forEach((part, index) => {
-      if (index === parts.length - 1) {
-        current[part] = obj[key];
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const isLast = i === parts.length - 1;
+
+      if (isLast) {
+        if (
+          typeof current[part] === "object" &&
+          current[part] !== null &&
+          !Array.isArray(current[part]) &&
+          typeof obj[key] === "object" &&
+          obj[key] !== null &&
+          !Array.isArray(obj[key])
+        ) {
+          current[part] = { ...current[part], ...obj[key] };
+        } else {
+          current[part] = obj[key];
+        }
       } else {
-        current[part] = current[part] || {};
+        if (!(part in current)) {
+          current[part] = {};
+        } else if (
+          typeof current[part] !== "object" ||
+          current[part] === null ||
+          Array.isArray(current[part])
+        ) {
+          current[part] = { value: current[part] };
+        }
         current = current[part];
       }
-    });
+    }
   }
 
   return result;
