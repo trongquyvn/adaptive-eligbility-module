@@ -59,7 +59,7 @@ export default function Header() {
   return (
     <header className="flex justify-between items-center px-6 py-4 border-b bg-white">
       <h1 className="text-2xl font-semibold text-gray-800 cursor-pointer">
-        {rule.trial && (
+        {(rule?.trial?.id && rule?.trial?.version) && (
           <>
             {rule?.metadata?.title} - {rule?.trial?.id} ({rule?.trial?.version})
           </>
