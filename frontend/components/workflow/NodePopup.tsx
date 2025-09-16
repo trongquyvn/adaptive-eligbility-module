@@ -377,16 +377,15 @@ export default function NodePopup({
                       </>
                     )}
 
-                    {nodeData.type === "ALL" ||
-                      (nodeData.type === "ANY" && (
+                    {(nodeData.type === "ALL" ||
+                      nodeData.type === "ANY") && (
                         <p>
-                          <span className="font-semibold">
+                          <span className="font-semibold">Children:</span>{" "}
                             {nodeData?.children
                               ?.map((e: any) => getNodeInfo(e)?.name)
                               .join(", ")}
-                          </span>
                         </p>
-                      ))}
+                      )}
                   </div>
 
                   {!editMode ? (

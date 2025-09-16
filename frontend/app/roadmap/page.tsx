@@ -53,19 +53,36 @@ export default function RoadmapPage() {
   const domainsCatalog = rule?.domain_catalog || [];
   const domains: string[] = [];
 
-  domainsCatalog.map((e: any) => {
+  domainsCatalog.forEach((e: any) => {
     domains.push(e.id);
   });
 
   const regimens: string[] = [];
-  (rule?.regimen_catalog || []).map((e: any) => {
+  (rule?.regimen_catalog || []).forEach((e: any) => {
     regimens.push(e.id);
   });
 
-  const variables: string[] = [];
-  (rule?.variables || []).map((e: any) => {
+  const booleanVars: string[] = [];
+  const timeVars: string[] = [];
+  const numVars: string[] = [];
+  const dataVars: string[] = [];
+  (rule?.variables || []).forEach((e: any) => {
     if (e.type !== "DATABASE") {
-      variables.push(e.id);
+      if (e.type === "BOOLEAN") {
+        booleanVars.push(e.id);
+      }
+
+      if (e.type === "TIME_WINDOW") {
+        timeVars.push(e.id);
+      }
+
+      if (e.type === "NUMBER") {
+        numVars.push(e.id);
+      }
+
+      if (e.type === "DATA") {
+        dataVars.push(e.id);
+      }
     }
   });
 
@@ -106,7 +123,10 @@ export default function RoadmapPage() {
             domainNodes={domainNodes}
             domains={domains}
             regimens={regimens}
-            variables={variables}
+            booleanVars={booleanVars}
+            timeVars={timeVars}
+            numVars={numVars}
+            dataVars={dataVars}
             initType={initType}
             initForm={initForm}
             onClose={() => {

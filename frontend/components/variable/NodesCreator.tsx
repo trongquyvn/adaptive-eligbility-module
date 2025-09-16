@@ -15,7 +15,10 @@ interface CreateNodeProps {
   domainNodes: string[];
   domains: string[];
   regimens: string[];
-  variables: string[];
+  booleanVars: string[];
+  timeVars: string[];
+  numVars: string[];
+  dataVars: string[];
   initForm?: Record<string, any>;
   initType?: NodeType;
   onClose: () => void;
@@ -27,16 +30,17 @@ const NODE_FIELDS: Record<
     key: string;
     label: string;
     type: string;
+    varType?: string;
     default?: any;
     optional?: boolean;
   }[]
 > = {
   BOOLEAN: [
-    { key: "input.var", label: "Variable", type: "text" },
+    { key: "input.var", varType: "BOOLEAN", label: "Variable", type: "text" },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
   COMPARE: [
-    { key: "input.var", label: "Variable", type: "text" },
+    { key: "input.var", varType: "NUMBER", label: "Variable", type: "text" },
     {
       key: "operator",
       label: "Operator (<, >, <=, >=, ==, !=)",
@@ -46,7 +50,12 @@ const NODE_FIELDS: Record<
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
   TIME_WINDOW: [
-    { key: "input.var", label: "Variable", type: "text" },
+    {
+      key: "input.var",
+      varType: "TIME_WINDOW",
+      label: "Variable",
+      type: "text",
+    },
     {
       key: "window.max_hours_since",
       label: "Max Hours",
@@ -62,7 +71,7 @@ const NODE_FIELDS: Record<
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
   NOT: [
-    { key: "input.var", label: "Variable", type: "text" },
+    { key: "input.var", varType: "BOOLEAN", label: "Variable", type: "text" },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
   ANY: [], // custom multi-select
@@ -78,7 +87,7 @@ const NODE_FIELDS: Record<
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
   DATA: [
-    { key: "input.var", label: "Variable", type: "text" },
+    { key: "input.var", varType: "DATA", label: "Variable", type: "text" },
     { key: "right.const", label: "Right Const", type: "text" },
     { key: "reason_on_fail", label: "Reason on Fail", type: "text" },
   ],
@@ -89,11 +98,20 @@ export default function CreateNode({
   domainNodes,
   domains,
   regimens,
-  variables,
+  booleanVars,
+  timeVars,
+  numVars,
+  dataVars,
   initForm,
   initType,
   onClose,
 }: CreateNodeProps) {
+  const VAR_TYPES: Record<string, string[]> = {
+    BOOLEAN: booleanVars,
+    NUMBER: numVars,
+    TIME_WINDOW: timeVars,
+    DATA: dataVars,
+  };
   const [open, setOpen] = useState(false);
   const [nodeType, setNodeType] = useState<NodeType | "">(initType || "");
   const [form, setForm] = useState<Record<string, any>>(
@@ -135,6 +153,17 @@ export default function CreateNode({
       }
       setNodeType(initType);
       setOpen(true);
+    } else {
+      setNodeType("");
+      setForm({ cate: "1" });
+      setDomainItems([{ domain_id: domains[0] || "", rule: nodes[0] || "" }]);
+      setConstraints([
+        {
+          regimen_id: regimens[0] || "",
+          exclude_if: nodes[0] || "",
+          reason_on_exclude: "",
+        },
+      ]);
     }
   }, [initType]);
 
@@ -338,7 +367,7 @@ export default function CreateNode({
                         onChange={(e) => handleChange(f.key, e.target.value)}
                       >
                         <option key="null">Select variable</option>
-                        {variables.map((n) => (
+                        {VAR_TYPES[f?.varType || "BOOLEAN"].map((n) => (
                           <option key={n} value={n}>
                             {getVariableInfo(n)?.name}
                           </option>
